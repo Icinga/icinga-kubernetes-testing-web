@@ -18,11 +18,19 @@ class TestController extends Controller
     public function indexAction(): void
     {
         $this->addContent(
-            Html::tag('h1', Attributes::create(), $this->translate('Kubernetes Testing')),
+            Html::tag(
+                'h1',
+                Attributes::create(),
+                $this->translate('Kubernetes Testing')
+            ),
         );
 
         $this->addContent(
-            Html::tag('a', Attributes::create(['href' => 'ktesting/test/create']), $this->translate('Create Test')),
+            Html::tag(
+                'a',
+                Attributes::create(['href' => 'ktesting/test/create']),
+                $this->translate('Create Test')
+            ),
         );
     }
 
@@ -31,7 +39,11 @@ class TestController extends Controller
         $this->addTitleTab($this->translate('Create'));
 
         $this->addContent(
-            Html::tag('h1', Attributes::create(), $this->translate('Create Test')),
+            Html::tag(
+                'h1',
+                Attributes::create(),
+                $this->translate('Create Test')
+            ),
         );
 
         $createTestForm = (new CreateTestForm())
