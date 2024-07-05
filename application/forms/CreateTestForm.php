@@ -2,7 +2,9 @@
 
 namespace Icinga\Module\Ktesting\Forms;
 
+use ipl\Html\Attributes;
 use ipl\Html\Contract\FormSubmitElement;
+use ipl\Html\FormElement\TextElement;
 use ipl\Web\Compat\CompatForm;
 use ipl\Html\Html;
 
@@ -10,16 +12,16 @@ class CreateTestForm extends CompatForm
 {
     protected function assemble(): void
     {
-        $submitButton = $this->createElement(
+        $submitBtn = $this->createElement(
             'submit',
             'submit',
             [
                 'label' => $this->translate('Create Test')
             ]
         );
-        $this->registerElement($submitButton);
+        $this->registerElement($submitBtn);
 
-        $addButton = $this->createElement(
+        $addBtn = $this->createElement(
             'submit',
             'addFields',
             [
@@ -27,7 +29,17 @@ class CreateTestForm extends CompatForm
                 'formnovalidate' => true
             ]
         );
-        $this->registerElement($addButton);
+        $this->registerElement($addBtn);
+
+        $removeBtn = $this->createElement(
+            'submit',
+            'removeFields',
+            [
+                'label' => '-',
+                'formnovalidate' => true
+            ]
+        );
+        $this->registerElement($removeBtn);
 
         $this->addElement(
             'input',
@@ -43,13 +55,16 @@ class CreateTestForm extends CompatForm
         $this->addHtml(Html::tag('br'));
 
         $this->addElement(
-            'input',
+            'select',
             'testKind',
             [
-                'type' => 'text',
                 'label' => $this->translate('Test Kind'),
                 'required' => true,
-                'value' => ''
+                'options' => [
+                    null => 'Please Choose',
+                    'cpu' => 'cpu',
+                    'memory' => 'memory',
+                ]
             ]
         );
 
@@ -84,29 +99,38 @@ class CreateTestForm extends CompatForm
             ]
         );
 
-        $numberOfAdditionalFields = 0;
+        $noOfAddFields = 0;
 
         if ($this->getElement('addFields')->hasBeenPressed()) {
-            $numberOfAdditionalFields = intval($this->getValue('numberOfAdditionalFields'));
-            $numberOfAdditionalFields++;
-            $this->getElement('numberOfAdditionalFields')->setValue($numberOfAdditionalFields);
+            $noOfAddFields = intval($this->getValue('numberOfAdditionalFields'));
+            $noOfAddFields++;
+            $this->getElement('numberOfAdditionalFields')->setValue($noOfAddFields);
+        }
+
+        if ($this->getElement('removeFields')->hasBeenPressed()) {
+            $noOfAddFields = intval($this->getValue('numberOfAdditionalFields'));
+            $noOfAddFields--;
+            $this->getElement('numberOfAdditionalFields')->setValue($noOfAddFields);
         }
 
         if ($this->getElement('submit')->hasBeenPressed()) {
-            $numberOfAdditionalFields = intval($this->getValue('numberOfAdditionalFields'));
+            $noOfAddFields = intval($this->getValue('numberOfAdditionalFields'));
         }
 
-        for ($i = 0; $i < $numberOfAdditionalFields; $i++) {
+        for ($i = 0; $i < $noOfAddFields; $i++) {
             $this->addHtml(Html::tag('br'));
 
             $this->addElement(
-                'input',
+                'select',
                 "testKind-$i",
                 [
-                    'type' => 'text',
                     'label' => $this->translate('Test Kind'),
                     'required' => true,
-                    'value' => ''
+                    'options' => [
+                        null => 'Please Choose',
+                        'cpu' => 'cpu',
+                        'memory' => 'memory',
+                    ]
                 ]
             );
 
@@ -133,7 +157,21 @@ class CreateTestForm extends CompatForm
             );
         }
 
-        $this->addElement($addButton);
-        $this->addElement($submitButton);
+        $this->addHtml(
+            Html::tag(
+                'div',
+                Attributes::create(['class' => 'control-group form-controls']),
+                Html::tag(
+                    'div',
+                    Attributes::create(),
+                    [
+                        ($noOfAddFields > 0) ? $removeBtn : null,
+                        $addBtn,
+                    ]
+                )
+            )
+        );
+
+        $this->addElement($submitBtn);
     }
 }
