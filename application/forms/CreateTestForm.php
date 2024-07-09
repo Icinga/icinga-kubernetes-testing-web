@@ -70,10 +70,10 @@ class CreateTestForm extends CompatForm
 
         $this->addElement(
             'input',
-            'goodReplicas',
+            'totalReplicas',
             [
                 'type' => 'number',
-                'label' => $this->translate('Good Replicas'),
+                'label' => $this->translate('Total Replicas'),
                 'required' => true,
                 'value' => ''
             ]
@@ -136,10 +136,10 @@ class CreateTestForm extends CompatForm
 
             $this->addElement(
                 'input',
-                "goodReplicas-$i",
+                "totalReplicas-$i",
                 [
                     'type' => 'number',
-                    'label' => $this->translate('Good Replicas'),
+                    'label' => $this->translate('Total Replicas'),
                     'required' => true,
                     'value' => ''
                 ]

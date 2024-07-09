@@ -57,20 +57,20 @@ class TestController extends Controller
                     . "&tests="
                     . $form->getValue('testKind')
                     . ","
-                    . $form->getValue('goodReplicas')
+                    . $form->getValue('totalReplicas')
                     . ","
                     . $form->getValue('badReplicas');
 
                 for ($i = 0; ; $i++) {
                     $testKind = $form->getValue("testKind-$i");
-                    $goodReplicas = $form->getValue("goodReplicas-$i");
+                    $totalReplicas = $form->getValue("totalReplicas-$i");
                     $badReplicas = $form->getValue("badReplicas-$i");
 
-                    if ($testKind === null || $goodReplicas === null || $badReplicas === null) {
+                    if ($testKind === null || $totalReplicas === null || $badReplicas === null) {
                         break;
                     }
 
-                    $query .= ":$testKind,$goodReplicas,$badReplicas";
+                    $query .= ":$testKind,$totalReplicas,$badReplicas";
                 }
 
                 $ch = curl_init("http://$clusterIp:$port/$endpoint?$query");
