@@ -52,14 +52,22 @@ class TestController extends Controller
                 $clusterIp = $config->get('api', 'clusterip');
                 $port = $config->get('api', 'port');
                 $endpoint = 'test/create';
+                $totalReplicas = $form->getValue("totalReplicas");
+                $badReplicas = $form->getValue("badReplicas");
+
+                if ($totalReplicas < $badReplicas) {
+                    Notification::error($this->translate('Bad replicas cannot be greater than total replicas'));
+                    return;
+                }
+
                 $query = "deploymentName="
                     . $form->getValue('deploymentName')
                     . "&tests="
                     . $form->getValue('testKind')
                     . ","
-                    . $form->getValue('totalReplicas')
+                    . $totalReplicas
                     . ","
-                    . $form->getValue('badReplicas');
+                    . $badReplicas;
 
                 for ($i = 0; ; $i++) {
                     $testKind = $form->getValue("testKind-$i");
@@ -68,6 +76,11 @@ class TestController extends Controller
 
                     if ($testKind === null || $totalReplicas === null || $badReplicas === null) {
                         break;
+                    }
+
+                    if ($totalReplicas < $badReplicas) {
+                        Notification::error($this->translate('Bad replicas cannot be greater than total replicas'));
+                        return;
                     }
 
                     $query .= ":$testKind,$totalReplicas,$badReplicas";
