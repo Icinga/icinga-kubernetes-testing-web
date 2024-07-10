@@ -6,17 +6,15 @@ namespace Icinga\Module\Ktesting\Model;
 
 use Icinga\Module\Ktesting\Model\Behavior\Uuid;
 use ipl\I18n\Translation;
-//use ipl\Orm\Behavior\MillisecondTimestamp;
 use ipl\Orm\Behavior\MillisecondTimestamp;
 use ipl\Orm\Behaviors;
 use ipl\Orm\Model;
-use ipl\Orm\Relations;
 
 class Test extends Model
 {
     use Translation;
 
-    public function createBehaviors(Behaviors $behaviors)
+    public function createBehaviors(Behaviors $behaviors): void
     {
         $behaviors->add(new Uuid([
             'uuid'
@@ -27,11 +25,7 @@ class Test extends Model
         ]));
     }
 
-    public function createRelations(Relations $relations)
-    {
-    }
-
-    public function getColumnDefinitions()
+    public function getColumnDefinitions(): array
     {
         return [
             'uuid'            => $this->translate('UUID'),
@@ -43,7 +37,7 @@ class Test extends Model
         ];
     }
 
-    public function getColumns()
+    public function getColumns(): array
     {
         return [
             'uuid',
@@ -55,22 +49,22 @@ class Test extends Model
         ];
     }
 
-    public function getDefaultSort()
+    public function getDefaultSort(): array
     {
         return ['name asc'];
     }
 
-    public function getKeyName()
+    public function getKeyName(): string
     {
         return 'uuid';
     }
 
-    public function getSearchColumns()
+    public function getSearchColumns(): array
     {
         return ['name'];
     }
 
-    public function getTableName()
+    public function getTableName(): string
     {
         return 'test';
     }

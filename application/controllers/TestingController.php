@@ -7,6 +7,7 @@ namespace Icinga\Module\Ktesting\Controllers;
 use Icinga\Application\Config;
 use Icinga\Module\Ktesting\Common\Database;
 use Icinga\Module\Ktesting\Forms\CreateTestForm;
+use Icinga\Module\Ktesting\Forms\DeleteForm;
 use Icinga\Module\Ktesting\Web\Controller;
 use Icinga\Module\Ktesting\Web\NavigationList;
 use Icinga\Web\Notification;
@@ -105,35 +106,32 @@ class TestingController extends Controller
 
     public function deleteAction(): void
     {
-        $config = Config::module('ktesting');
+        (new DeleteForm())
+            ->on(DeleteForm::ON_SUCCESS, function (DeleteForm $form) {
+                $config = Config::module('ktesting');
 
-        $clusterIp = $config->get('api', 'clusterIp');
-        $port = $config->get('api', 'apiPort');
-        $endpoint = 'test/delete';
+                $clusterIp = $config->get('api', 'clusterIp');
+                $port = $config->get('api', 'apiPort');
+                $endpoint = 'test/delete';
 
-        $namespace = $this->params->get('namespace');
-        $name = $this->params->get('name');
+                $namespace = $this->params->get('namespace');
+                $name = $this->params->get('name');
 
-        $query = "tests=$namespace/$name";
+                $query = "tests=$namespace/$name";
 
-        $ch = curl_init("http://$clusterIp:$port/$endpoint?$query");
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                $ch = curl_init("http://$clusterIp:$port/$endpoint?$query");
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
-        try {
-            $response = curl_exec($ch);
-            Notification::info($this->translate($response));
-        } catch (\Exception $e) {
-            $response = $e->getMessage();
-            Notification::error($this->translate($response));
-        }
+                try {
+                    $response = curl_exec($ch);
+                    Notification::info($this->translate($response));
+                } catch (\Exception $e) {
+                    $response = $e->getMessage();
+                    Notification::error($this->translate($response));
+                }
 
-        $this->addContent(
-            Html::tag(
-                'span',
-                Attributes::create()
-            ),
-        );
+                $this->redirectNow('ktesting/tests');
+            })->handleRequest($this->getServerRequest());
 
-        $this->redirectNow('ktesting/tests');
     }
 }

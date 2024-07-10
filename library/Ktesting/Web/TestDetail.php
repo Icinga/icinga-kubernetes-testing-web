@@ -14,8 +14,7 @@ class TestDetail extends BaseHtmlElement
 {
     use Translation;
 
-    /** @var Test */
-    protected $test;
+    protected Test $test;
 
     protected $tag = 'div';
 
@@ -24,10 +23,8 @@ class TestDetail extends BaseHtmlElement
         $this->test = $test;
     }
 
-    protected function assemble()
+    protected function assemble(): void
     {
-//        CopyToClipboard::attachTo($icingaStateReason);
-
         $this->addHtml(
             new Details(new ResourceDetails($this->test, [
                 $this->translate('Deployment Name') => $this->test->deployment_name,
