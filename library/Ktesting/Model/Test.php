@@ -7,6 +7,7 @@ namespace Icinga\Module\Ktesting\Model;
 use Icinga\Module\Ktesting\Model\Behavior\Uuid;
 use ipl\I18n\Translation;
 //use ipl\Orm\Behavior\MillisecondTimestamp;
+use ipl\Orm\Behavior\MillisecondTimestamp;
 use ipl\Orm\Behaviors;
 use ipl\Orm\Model;
 use ipl\Orm\Relations;
@@ -21,9 +22,9 @@ class Test extends Model
             'uuid'
         ]));
 
-//        $behaviors->add(new MillisecondTimestamp([
-//            'created'
-//        ]));
+        $behaviors->add(new MillisecondTimestamp([
+            'created'
+        ]));
     }
 
     public function createRelations(Relations $relations)
@@ -38,7 +39,7 @@ class Test extends Model
             'name'            => $this->translate('Name'),
             'uid'             => $this->translate('UID'),
             'deployment_name' => $this->translate('Deployment Name'),
-//            'created'         => $this->translate('Created At')
+            'created'         => $this->translate('Created At')
         ];
     }
 
@@ -50,6 +51,7 @@ class Test extends Model
             'name',
             'uid',
             'deployment_name',
+            'created',
         ];
     }
 

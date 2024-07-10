@@ -10,8 +10,13 @@ use Ramsey\Uuid\Uuid;
 
 abstract class Links
 {
+    public static function delete(Test $test): Url
+    {
+        return Url::fromPath('ktesting/testing/delete', ['namespace' => $test->namespace, 'name' => $test->name]);
+    }
+
     public static function test(Test $test): Url
     {
-        return Url::fromPath('ktesting/tests', ['id' => (string) Uuid::fromBytes($test->uuid)]);
+        return Url::fromPath('ktesting/test', ['id' => (string) Uuid::fromBytes($test->uuid)]);
     }
 }

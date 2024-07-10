@@ -45,8 +45,8 @@ class TestingController extends Controller
 
                 $rs = $db->yieldAll(
                     (new Select())
-                    ->columns('deployment_name')
-                    ->from('test')
+                        ->columns('deployment_name')
+                        ->from('test')
                 );
 
                 foreach ($rs as $row) {
@@ -101,5 +101,39 @@ class TestingController extends Controller
 
         $this->addContent($createTestForm);
 
+    }
+
+    public function deleteAction(): void
+    {
+        $config = Config::module('ktesting');
+
+        $clusterIp = $config->get('api', 'clusterIp');
+        $port = $config->get('api', 'apiPort');
+        $endpoint = 'test/delete';
+
+        $namespace = $this->params->get('namespace');
+        $name = $this->params->get('name');
+
+        $query = "tests=$namespace/$name";
+
+        $ch = curl_init("http://$clusterIp:$port/$endpoint?$query");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        try {
+            $response = curl_exec($ch);
+            Notification::info($this->translate($response));
+        } catch (\Exception $e) {
+            $response = $e->getMessage();
+            Notification::error($this->translate($response));
+        }
+
+        $this->addContent(
+            Html::tag(
+                'span',
+                Attributes::create()
+            ),
+        );
+
+        $this->redirectNow('ktesting/tests');
     }
 }

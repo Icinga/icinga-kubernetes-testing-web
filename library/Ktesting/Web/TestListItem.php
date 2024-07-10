@@ -12,6 +12,7 @@ use ipl\Html\Html;
 use ipl\Html\HtmlElement;
 use ipl\I18n\Translation;
 use ipl\Web\Widget\Link;
+use ipl\Web\Widget\TimeAgo;
 use ipl\Web\Widget\VerticalKeyValue;
 use ipl\Web\Widget\HorizontalKeyValue;
 
@@ -22,8 +23,8 @@ class TestListItem extends BaseListItem
     protected function assembleHeader(BaseHtmlElement $header): void
     {
         $header
-            ->addHtml($this->createTitle());
-//            ->addHtml(new TimeAgo($this->item->created->getTimestamp()));
+            ->addHtml($this->createTitle())
+            ->addHtml(new TimeAgo($this->item->created->getTimestamp()));
     }
 
     protected function assembleMain(BaseHtmlElement $main): void
@@ -47,7 +48,7 @@ class TestListItem extends BaseListItem
     {
         $title->addHtml(Html::sprintf(
             $this->translate('%s', '<test>'),
-            new Link($this->item->name, Links::test($this->item), ['class' => 'subject'])
+            new Link($this->item->name, Links::test($this->item), ['class' => 'subject']),
         ));
     }
 
