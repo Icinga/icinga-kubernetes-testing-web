@@ -11,6 +11,8 @@ class ApiConfigForm extends CompatForm
 {
     protected function assemble()
     {
+        $dbResources = ResourceFactory::getResourceConfigs('db')->keys();
+
         $this->addElement(
             'input',
             'clusterIp',
@@ -34,10 +36,14 @@ class ApiConfigForm extends CompatForm
         );
 
         $this->addElement(
-            'input',
-            'dbPort',
+            'select',
+            'resource',
             [
-                'label'    => $this->translate('DB Port'),
+                'label'    => $this->translate('Database'),
+                'options'  => array_merge(
+                    ['' => sprintf(' - %s - ', $this->translate('Please choose'))],
+                    array_combine($dbResources, $dbResources)
+                ),
                 'disable'  => [''],
                 'required' => true,
                 'value'    => ''

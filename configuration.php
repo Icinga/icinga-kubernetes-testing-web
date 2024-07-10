@@ -16,10 +16,19 @@ $section = $this->menuSection(
 $priority = 0;
 
 $section->add(
-    N_('Test'),
+    N_('Tests'),
     [
-        'description' => $this->translate('Test'),
-        'url'         => 'ktesting/test',
+        'description' => $this->translate('List all tests'),
+        'url'         => 'ktesting/tests',
+        'priority'    => $priority++
+    ]
+);
+
+$section->add(
+    N_('Create'),
+    [
+        'description' => $this->translate('Create new test'),
+        'url'         => 'ktesting/testing/create',
         'priority'    => $priority++
     ]
 );

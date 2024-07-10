@@ -13,27 +13,8 @@ use ipl\Html\Text;
 use ipl\Html\Html;
 use ipl\Html\Attributes;
 
-class TestController extends Controller
+class TestingController extends Controller
 {
-    public function indexAction(): void
-    {
-        $this->addContent(
-            Html::tag(
-                'h1',
-                Attributes::create(),
-                $this->translate('Kubernetes Testing')
-            ),
-        );
-
-        $this->addContent(
-            Html::tag(
-                'a',
-                Attributes::create(['href' => 'ktesting/test/create']),
-                $this->translate('Create Test')
-            ),
-        );
-    }
-
     public function createAction(): void
     {
         $this->addTitleTab($this->translate('Create'));
