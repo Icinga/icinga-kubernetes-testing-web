@@ -49,8 +49,8 @@ class TestController extends Controller
         $createTestForm = (new CreateTestForm())
             ->on(CreateTestForm::ON_SUCCESS, function (CreateTestForm $form) {
                 $config = Config::module('ktesting');
-                $clusterIp = $config->get('api', 'clusterip');
-                $port = $config->get('api', 'port');
+                $clusterIp = $config->get('api', 'clusterIp');
+                $port = $config->get('api', 'apiPort');
                 $endpoint = 'test/create';
                 $totalReplicas = $form->getValue("totalReplicas");
                 $badReplicas = $form->getValue("badReplicas");

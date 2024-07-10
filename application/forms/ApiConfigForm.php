@@ -13,7 +13,7 @@ class ApiConfigForm extends CompatForm
     {
         $this->addElement(
             'input',
-            'clusterip',
+            'clusterIp',
             [
                 'label'    => $this->translate('Cluster IP'),
                 'disable'  => [''],
@@ -24,9 +24,20 @@ class ApiConfigForm extends CompatForm
 
         $this->addElement(
             'input',
-            'port',
+            'apiPort',
             [
-                'label'    => $this->translate('Port'),
+                'label'    => $this->translate('API Port'),
+                'disable'  => [''],
+                'required' => true,
+                'value'    => ''
+            ]
+        );
+
+        $this->addElement(
+            'input',
+            'dbPort',
+            [
+                'label'    => $this->translate('DB Port'),
                 'disable'  => [''],
                 'required' => true,
                 'value'    => ''
