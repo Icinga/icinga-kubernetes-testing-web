@@ -5,6 +5,7 @@
 namespace Icinga\Module\Ktesting\Controllers;
 
 use Icinga\Application\Config;
+use Icinga\Module\Ktesting\Common\Database;
 use Icinga\Module\Ktesting\Forms\CreateTestForm;
 use Icinga\Module\Ktesting\Web\Controller;
 use Icinga\Module\Ktesting\Web\NavigationList;
@@ -12,6 +13,7 @@ use Icinga\Web\Notification;
 use ipl\Html\Text;
 use ipl\Html\Html;
 use ipl\Html\Attributes;
+use ipl\Sql\Select;
 
 class TestingController extends Controller
 {
@@ -30,11 +32,29 @@ class TestingController extends Controller
         $createTestForm = (new CreateTestForm())
             ->on(CreateTestForm::ON_SUCCESS, function (CreateTestForm $form) {
                 $config = Config::module('ktesting');
+                $db = Database::connection();
+
                 $clusterIp = $config->get('api', 'clusterIp');
                 $port = $config->get('api', 'apiPort');
                 $endpoint = 'test/create';
+
+                $deploymentName = $form->getValue('deploymentName');
+                $testKind = $form->getValue('testKind');
                 $totalReplicas = $form->getValue("totalReplicas");
                 $badReplicas = $form->getValue("badReplicas");
+
+                $rs = $db->yieldAll(
+                    (new Select())
+                    ->columns('deployment_name')
+                    ->from('test')
+                );
+
+                foreach ($rs as $row) {
+                    if ($row->deployment_name === $deploymentName) {
+                        Notification::error($this->translate('Deployment name already exists'));
+                        return;
+                    }
+                }
 
                 if ($totalReplicas < $badReplicas) {
                     Notification::error($this->translate('Bad replicas cannot be greater than total replicas'));
@@ -42,9 +62,9 @@ class TestingController extends Controller
                 }
 
                 $query = "deploymentName="
-                    . $form->getValue('deploymentName')
+                    . $deploymentName
                     . "&tests="
-                    . $form->getValue('testKind')
+                    . $testKind
                     . ","
                     . $totalReplicas
                     . ","
