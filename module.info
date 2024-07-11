@@ -1,2 +1,6 @@
 Module: ktesting
 Version: 0.1.0
+Requires:
+  Modules: kubernetes (>=0.1.0)
+Description:
+  Testing module for Icinga for Kubernetes
