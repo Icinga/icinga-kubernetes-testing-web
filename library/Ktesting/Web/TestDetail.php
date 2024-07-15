@@ -46,22 +46,29 @@ class TestDetail extends BaseHtmlElement
             $rulesForReplicaSets[] = Filter::equal('owner.owner_uuid', $deployment->uuid);
         }
 
-        $queryReplicaSets = ReplicaSet::on(KDatabase::connection())
-            ->filter(
-                Filter::any(...$rulesForReplicaSets)
-            );
-        $resReplicaSets = $queryReplicaSets->execute();
+        $show = false;
 
-        $rulesForPods = [];
-        foreach ($resReplicaSets as $replicaSet) {
-            $rulesForPods[] = Filter::equal('owner.owner_uuid', $replicaSet->uuid);
+        if (!empty($rulesForReplicaSets)) {
+            $show = true;
+            $queryReplicaSets = ReplicaSet::on(KDatabase::connection())
+                ->filter(
+                    Filter::any(...$rulesForReplicaSets)
+                );
+            $resReplicaSets = $queryReplicaSets->execute();
+
+            $rulesForPods = [];
+            foreach ($resReplicaSets as $replicaSet) {
+                $rulesForPods[] = Filter::equal('owner.owner_uuid', $replicaSet->uuid);
+            }
+
+            if (!empty($rulesForPods)) {
+                $queryPods = Pod::on(KDatabase::connection())
+                    ->filter(
+                        Filter::any(...$rulesForPods)
+                    );
+                $resPods = $queryPods->execute();
+            }
         }
-
-        $queryPods = Pod::on(KDatabase::connection())
-            ->filter(
-                Filter::any(...$rulesForPods)
-            );
-        $resPods = $queryPods->execute();
 
         $this->addHtml(
             new Details(new ResourceDetails($this->test, [
@@ -71,13 +78,13 @@ class TestDetail extends BaseHtmlElement
                 'section',
                 null,
                 new HtmlElement('h2', null, new Text($this->translate('Deployments'))),
-                new DeploymentList($resDeployments)
+                ($show) ? new DeploymentList($resDeployments) : new HtmlElement('span')
             ),
             new HtmlElement(
                 'section',
                 null,
                 new HtmlElement('h2', null, new Text($this->translate('Pods'))),
-                new PodList($resPods)
+                (isset($resPods) && $resPods->hasResult()) ? new PodList($resPods) : new HtmlElement('span')
             )
         );
     }
