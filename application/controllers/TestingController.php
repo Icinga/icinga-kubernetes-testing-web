@@ -9,12 +9,13 @@ use Icinga\Module\Ktesting\Common\Database;
 use Icinga\Module\Ktesting\Forms\CreateTestForm;
 use Icinga\Module\Ktesting\Forms\DeleteForm;
 use Icinga\Module\Ktesting\Web\Controller;
-use Icinga\Module\Ktesting\Web\NavigationList;
 use Icinga\Web\Notification;
-use ipl\Html\Text;
 use ipl\Html\Html;
 use ipl\Html\Attributes;
+use ipl\Sql\Insert;
 use ipl\Sql\Select;
+use DateTime;
+use Exception;
 
 class TestingController extends Controller
 {
@@ -101,12 +102,60 @@ class TestingController extends Controller
                 $ch = curl_init("http://$clusterIp:$port/$endpoint?$query");
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
+                $storeTemplate = true;
+
                 try {
                     $response = curl_exec($ch);
                     Notification::info($this->translate($response));
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     $response = $e->getMessage();
                     Notification::error($this->translate($response));
+                    $storeTemplate = false;
+                }
+
+                if ($form->getValue('templateName') !== '' && $storeTemplate) {
+                    $id = hash('md5', $form->getValue('templateName'));
+
+                    $db->prepexec(
+                        (new Insert())
+                            ->into('template')
+                            ->columns(['id', 'name', 'created'])
+                            ->values([
+                                $id,
+                                $form->getValue('templateName'),
+                                (new DateTime())->getTimestamp() * 1000
+                            ])
+                    );
+
+                    $db->prepexec(
+                        (new Insert())
+                            ->into('template_test')
+                            ->columns(['template_id', 'test_kind', 'total_replicas', 'bad_replicas'])
+                            ->values([
+                                $id,
+                                $form->getValue('testKind'),
+                                $form->getValue('totalReplicas'),
+                                $form->getValue('badReplicas')
+                            ])
+                    );
+
+
+                    for ($i = 0; ; $i++) {
+                        $testKind = $form->getValue("testKind-$i");
+                        $totalReplicas = $form->getValue("totalReplicas-$i");
+                        $badReplicas = $form->getValue("badReplicas-$i");
+
+                        if ($testKind === null || $totalReplicas === null || $badReplicas === null) {
+                            break;
+                        }
+
+                        $db->prepexec(
+                            (new Insert())
+                                ->into('template_test')
+                                ->columns(['template_id', 'test_kind', 'total_replicas', 'bad_replicas'])
+                                ->values([$id, $testKind, $totalReplicas, $badReplicas])
+                        );
+                    }
                 }
             })->handleRequest($this->getServerRequest());
 
