@@ -62,6 +62,11 @@ class TestingController extends Controller
                     return;
                 }
 
+                if ($totalReplicas == 0) {
+                    Notification::error($this->translate('Total replicas cannot be 0'));
+                    return;
+                }
+
                 $query = "deploymentName="
                     . $deploymentName
                     . "&tests="
@@ -82,6 +87,11 @@ class TestingController extends Controller
 
                     if ($totalReplicas < $badReplicas) {
                         Notification::error($this->translate('Bad replicas cannot be greater than total replicas'));
+                        return;
+                    }
+
+                    if ($totalReplicas == 0) {
+                        Notification::error($this->translate('Total replicas cannot be 0'));
                         return;
                     }
 
