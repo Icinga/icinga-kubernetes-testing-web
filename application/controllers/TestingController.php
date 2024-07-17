@@ -1,6 +1,6 @@
 <?php
 
-/* Icinga for Kubernetes Web | (c) 2024 Icinga GmbH | GPLv2 */
+/* Icinga for Kubernetes Testing Web | (c) 2024 Icinga GmbH | GPLv2 */
 
 namespace Icinga\Module\Ktesting\Controllers;
 
@@ -9,6 +9,7 @@ use Icinga\Module\Ktesting\Common\Database;
 use Icinga\Module\Ktesting\Forms\CreateTestForm;
 use Icinga\Module\Ktesting\Forms\DeleteForm;
 use Icinga\Module\Ktesting\Web\Controller;
+use Icinga\Module\Ktesting\Web\CreateAndTemplatesTabs;
 use Icinga\Web\Notification;
 use ipl\Html\Html;
 use ipl\Html\Attributes;
@@ -19,9 +20,11 @@ use Exception;
 
 class TestingController extends Controller
 {
+    use CreateAndTemplatesTabs;
+
     public function createAction(): void
     {
-        $this->addTitleTab($this->translate('Create'));
+        $this->createTabs()->activate('create');
 
         $this->addContent(
             Html::tag(

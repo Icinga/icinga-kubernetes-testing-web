@@ -1,7 +1,6 @@
 <?php
 
-/* Icinga for
-use ipl\Web\Widget\StateBall; Testing Web | (c) 2024 Icinga GmbH | GPLv2 */
+/* Icinga for Kubernetes Testing Web | (c) 2024 Icinga GmbH | GPLv2 */
 
 namespace Icinga\Module\Ktesting\Controllers;
 

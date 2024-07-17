@@ -1,10 +1,10 @@
 <?php
 
+/* Icinga for Kubernetes Testing Web | (c) 2024 Icinga GmbH | GPLv2 */
+
 namespace Icinga\Module\Ktesting\Forms;
 
 use ipl\Html\Attributes;
-use ipl\Html\Contract\FormSubmitElement;
-use ipl\Html\FormElement\TextElement;
 use ipl\Web\Compat\CompatForm;
 use ipl\Html\Html;
 

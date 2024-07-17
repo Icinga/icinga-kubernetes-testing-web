@@ -1,6 +1,6 @@
 <?php
 
-/* Icinga for Kubernetes Web | (c) 2024 Icinga GmbH | GPLv2 */
+/* Icinga for Kubernetes Testing Web | (c) 2024 Icinga GmbH | GPLv2 */
 
 /** @var Module $this */
 
@@ -25,9 +25,9 @@ $section->add(
 );
 
 $section->add(
-    N_('Create'),
+    N_('Manage'),
     [
-        'description' => $this->translate('Create new test'),
+        'description' => $this->translate('Manage tests'),
         'url'         => 'ktesting/testing/create',
         'priority'    => $priority++
     ]
