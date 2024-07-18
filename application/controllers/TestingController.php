@@ -126,7 +126,7 @@ class TestingController extends Controller
                             ->values([
                                 $id,
                                 $form->getValue('templateName'),
-                                (new DateTime())->getTimestamp() * 1000
+                                time() * 1000
                             ])
                     );
 

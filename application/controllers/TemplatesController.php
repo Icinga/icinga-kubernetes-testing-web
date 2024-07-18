@@ -21,14 +21,6 @@ class TemplatesController extends Controller
     {
         $this->createTabs()->activate('templates');
 
-        $this->addContent(
-            Html::tag(
-                'h1',
-                Attributes::create(),
-                $this->translate('Templates')
-            ),
-        );
-
         $templates = Template::on(Database::connection());
 
         $sortControl = $this->createSortControl(
@@ -36,6 +28,7 @@ class TemplatesController extends Controller
             [
                 'name'      => $this->translate('Name'),
                 'created'   => $this->translate('Created At'),
+                'modified'   => $this->translate('Modified At'),
             ]
         );
 
@@ -51,6 +44,7 @@ class TemplatesController extends Controller
                     new Link($template->name, Url::fromPath('ktesting/template/edit', ['id' => $template->id]))
                 ),
                 Html::tag('td', null, $template->created->format('Y-m-d H:i')),
+                Html::tag('td', null, (isset($template->modified)) ? $template->modified->format('Y-m-d H:i') : null),
             ]);
         }
 
@@ -68,6 +62,7 @@ class TemplatesController extends Controller
                             [
                                 Html::tag('th', null, 'Name'),
                                 Html::tag('th', null, 'Date Created'),
+                                Html::tag('th', null, 'Date Modified'),
                             ]
                         )
                     ),

@@ -14,15 +14,11 @@ class TemplateTest extends Model
         return 'template_test';
     }
 
-    public function getKeyName()
-    {
-        return 'id';
-    }
+    public function getKeyName() {}
 
     public function getColumns()
     {
         return [
-            'id',
             'template_id',
             'test_kind',
             'total_replicas',
@@ -32,7 +28,7 @@ class TemplateTest extends Model
 
     public function getDefaultSort()
     {
-        return ['id'];
+        return ['template_id'];
     }
 
     public function createRelations(Relations $relations)

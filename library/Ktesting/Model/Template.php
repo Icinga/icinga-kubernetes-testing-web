@@ -26,7 +26,8 @@ class Template extends Model
         return [
             'id',
             'name',
-            'created'
+            'created',
+            'modified'
         ];
     }
 
@@ -39,6 +40,10 @@ class Template extends Model
     {
         $behaviors->add(new MillisecondTimestamp([
             'created',
+        ]));
+
+        $behaviors->add(new MillisecondTimestamp([
+            'modified',
         ]));
     }
 
