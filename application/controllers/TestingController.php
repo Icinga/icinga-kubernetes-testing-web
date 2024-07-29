@@ -97,24 +97,27 @@ class TestingController extends Controller
                     $response = curl_exec($ch);
                     Notification::info($this->translate($response));
                 } catch (Exception $e) {
-                    $response = $e->getMessage();
-                    Notification::error($this->translate($response));
+                    Notification::error($this->translate($e->getMessage()));
                     $storeTemplate = false;
                 }
 
                 if ($form->getValue('templateName') && $storeTemplate) {
                     $id = hash('md5', $form->getValue('templateName'));
 
-                    $db->prepexec(
-                        (new Insert())
-                            ->into('template')
-                            ->columns(['id', 'name', 'created'])
-                            ->values([
-                                $id,
-                                $form->getValue('templateName'),
-                                time() * 1000
-                            ])
-                    );
+                    try {
+                        $db->prepexec(
+                            (new Insert())
+                                ->into('template')
+                                ->columns(['id', 'name', 'created'])
+                                ->values([
+                                    $id,
+                                    $form->getValue('templateName'),
+                                    time() * 1000
+                                ])
+                        );
+                    } catch (Exception $e) {
+                        die($e->getMessage());
+                    }
 
                     for ($i = 0; ; $i++) {
                         $testKind = $form->getValue("testKind-$i");
@@ -125,12 +128,16 @@ class TestingController extends Controller
                             break;
                         }
 
-                        $db->prepexec(
-                            (new Insert())
-                                ->into('template_test')
-                                ->columns(['template_id', 'test_kind', 'total_replicas', 'bad_replicas'])
-                                ->values([$id, $testKind, $totalReplicas, $badReplicas])
-                        );
+                        try {
+                            $db->prepexec(
+                                (new Insert())
+                                    ->into('template_test')
+                                    ->columns(['template_id', 'test_kind', 'total_replicas', 'bad_replicas'])
+                                    ->values([$id, $testKind, $totalReplicas, $badReplicas])
+                            );
+                        } catch (Exception $e) {
+                            die($e->getMessage());
+                        }
                     }
                 }
             })->handleRequest($this->getServerRequest());

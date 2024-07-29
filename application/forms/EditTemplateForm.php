@@ -34,21 +34,25 @@ class EditTemplateForm extends CompatForm
 
         $form->template = $template;
 
-        $res = Database::connection()->prepexec(
-            (new Select())
-                ->columns(['test_kind', 'total_replicas', 'bad_replicas'])
-                ->from('template_test')
-                ->join('template', 'template.id=template_test.template_id')
-                ->where('template.id=?', $template->id)
-        )->fetchAll();
+        try {
+            $res = Database::connection()->prepexec(
+                (new Select())
+                    ->columns(['test_kind', 'total_replicas', 'bad_replicas'])
+                    ->from('template_test')
+                    ->join('template', 'template.id=template_test.template_id')
+                    ->where('template.id=?', $template->id)
+            )->fetchAll();
+        } catch (Exception $e) {
+            die($e->getMessage());
+        }
 
         $form->populate($template);
 
         foreach ($res as $index => $row) {
             $form->populate([
-                "testKind-" . $index        => $row->test_kind,
-                "totalReplicas-" . $index   => $row->total_replicas,
-                "badReplicas-" . $index     => $row->bad_replicas
+                "testKind-" . $index      => $row->test_kind,
+                "totalReplicas-" . $index => $row->total_replicas,
+                "badReplicas-" . $index   => $row->bad_replicas
             ]);
         }
 
@@ -78,7 +82,7 @@ class EditTemplateForm extends CompatForm
             'submit',
             'addFields',
             [
-                'label' => '+',
+                'label'          => '+',
                 'formnovalidate' => true
             ]
         );
@@ -88,16 +92,16 @@ class EditTemplateForm extends CompatForm
             'submit',
             'removeFields',
             [
-                'label' => '-',
+                'label'          => '-',
                 'formnovalidate' => true
             ]
         );
         $this->registerElement($removeBtn);
 
         $this->addElement('text', 'name', [
-            'label' => $this->translate('Name'),
+            'label'       => $this->translate('Name'),
             'placeholder' => $this->translate('Template name'),
-            'required' => true
+            'required'    => true
         ]);
 
         $this->addHtml(Html::tag('br'));
@@ -106,11 +110,11 @@ class EditTemplateForm extends CompatForm
             'select',
             'testKind-0',
             [
-                'label' => $this->translate('Test Kind'),
+                'label'    => $this->translate('Test Kind'),
                 'required' => true,
-                'options' => [
-                    null => 'Please Choose',
-                    'cpu' => 'cpu',
+                'options'  => [
+                    null     => 'Please Choose',
+                    'cpu'    => 'cpu',
                     'memory' => 'memory',
                 ]
             ]
@@ -120,10 +124,10 @@ class EditTemplateForm extends CompatForm
             'input',
             'totalReplicas-0',
             [
-                'type' => 'number',
-                'label' => $this->translate('Total Replicas'),
+                'type'     => 'number',
+                'label'    => $this->translate('Total Replicas'),
                 'required' => true,
-                'value' => ''
+                'value'    => ''
             ]
         );
 
@@ -131,10 +135,10 @@ class EditTemplateForm extends CompatForm
             'input',
             'badReplicas-0',
             [
-                'type' => 'number',
-                'label' => $this->translate('Bad Replicas'),
+                'type'     => 'number',
+                'label'    => $this->translate('Bad Replicas'),
                 'required' => true,
-                'value' => ''
+                'value'    => ''
             ]
         );
 
@@ -142,7 +146,7 @@ class EditTemplateForm extends CompatForm
             'hidden',
             'numberOfAdditionalFields',
             [
-                'type' => 'hidden',
+                'type'  => 'hidden',
                 'value' => $this->noTemplateTests
             ]
         );
@@ -172,11 +176,11 @@ class EditTemplateForm extends CompatForm
                 'select',
                 "testKind-$i",
                 [
-                    'label' => $this->translate('Test Kind'),
+                    'label'    => $this->translate('Test Kind'),
                     'required' => true,
-                    'options' => [
-                        null => 'Please Choose',
-                        'cpu' => 'cpu',
+                    'options'  => [
+                        null     => 'Please Choose',
+                        'cpu'    => 'cpu',
                         'memory' => 'memory',
                     ]
                 ]
@@ -186,10 +190,10 @@ class EditTemplateForm extends CompatForm
                 'input',
                 "totalReplicas-$i",
                 [
-                    'type' => 'number',
-                    'label' => $this->translate('Total Replicas'),
+                    'type'     => 'number',
+                    'label'    => $this->translate('Total Replicas'),
                     'required' => true,
-                    'value' => ''
+                    'value'    => ''
                 ]
             );
 
@@ -197,10 +201,10 @@ class EditTemplateForm extends CompatForm
                 'input',
                 "badReplicas-$i",
                 [
-                    'type' => 'number',
-                    'label' => $this->translate('Bad Replicas'),
+                    'type'     => 'number',
+                    'label'    => $this->translate('Bad Replicas'),
                     'required' => true,
-                    'value' => ''
+                    'value'    => ''
                 ]
             );
         }
@@ -230,8 +234,8 @@ class EditTemplateForm extends CompatForm
 
 //        if ($this->template !== null) {
         $removeButton = $this->createElement('submit', 'remove', [
-            'label' => $this->translate('Remove Template'),
-            'class' => 'btn-remove',
+            'label'          => $this->translate('Remove Template'),
+            'class'          => 'btn-remove',
             'formnovalidate' => true
         ]);
         $this->registerElement($removeButton);
@@ -244,41 +248,50 @@ class EditTemplateForm extends CompatForm
 
     public function onSuccess()
     {
-        Database::connection()->delete('template_test', ['template_id = ?' => $this->template->id]);
+        try {
+            Database::connection()->delete('template_test', ['template_id = ?' => $this->template->id]);
+        } catch (Exception $e) {
+            die($e->getMessage());
+        }
 
         if ($this->getPopulatedValue('remove')) {
-            Database::connection()->delete('template', ['id = ?' => $this->template->id]);
+            try {
+                Database::connection()->delete('template', ['id = ?' => $this->template->id]);
+            } catch (Exception $e) {
+                die($e->getMessage());
+            }
             return;
         }
 
         $values = $this->getValues();
 
+        $db = Database::connection();
         try {
-            $db = Database::connection();
-
             $db->update('template', [
-                'name' => $values['name'],
+                'name'     => $values['name'],
                 'modified' => time() * 1000
             ], ['id = ?' => $this->template->id]);
-
-            for ($i = 0; ; $i++) {
-                if (
-                    !isset($values["testKind-$i"])
-                    || !isset($values["totalReplicas-$i"])
-                    || !isset($values["badReplicas-$i"])
-                ) {
-                    break;
-                }
-                $db->insert('template_test', [
-                    'template_id' => $this->template->id,
-                    'test_kind' => $values["testKind-$i"],
-                    'total_replicas' => $values["totalReplicas-$i"],
-                    'bad_replicas' => $values["badReplicas-$i"]
-                ]);
-            }
-
         } catch (Exception $e) {
             die($e->getMessage());
+        }
+        for ($i = 0; ; $i++) {
+            if (
+                ! isset($values["testKind-$i"])
+                || ! isset($values["totalReplicas-$i"])
+                || ! isset($values["badReplicas-$i"])
+            ) {
+                break;
+            }
+            try {
+                $db->insert('template_test', [
+                    'template_id'    => $this->template->id,
+                    'test_kind'      => $values["testKind-$i"],
+                    'total_replicas' => $values["totalReplicas-$i"],
+                    'bad_replicas'   => $values["badReplicas-$i"]
+                ]);
+            } catch (Exception $e) {
+                die($e->getMessage());
+            }
         }
     }
 }

@@ -4,7 +4,6 @@
 
 namespace Icinga\Module\Ktesting\Forms;
 
-use Icinga\Web\Notification;
 use ipl\Web\Widget\Icon;
 
 class DeleteForm extends CommandForm
@@ -25,7 +24,7 @@ class DeleteForm extends CommandForm
             'submitButton',
             'btn_submit',
             [
-                'class' => ['link-button', 'spinner'],
+                'class' => ['link-button'],
                 'label' => [
                     new Icon('trash'),
                     t('Delete')

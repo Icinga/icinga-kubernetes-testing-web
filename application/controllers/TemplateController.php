@@ -10,7 +10,6 @@ use Icinga\Module\Ktesting\Forms\EditTemplateForm;
 use Icinga\Module\Ktesting\Common\Database;
 use Icinga\Web\Notification;
 use ipl\Html\Form;
-use ipl\Sql\Select;
 use ipl\Web\Url;
 use ipl\Stdlib\Filter;
 use Exception;
@@ -23,13 +22,17 @@ class TemplateController extends Controller
     {
         parent::init();
 
-        /** @var Template $template */
-        $template = Template::on(Database::connection())
-            ->filter(Filter::equal('id', $this->params->getRequired('id')))
-            ->first();
+        try {
+            /** @var Template $template */
+            $template = Template::on(Database::connection())
+                ->filter(Filter::equal('id', $this->params->getRequired('id')))
+                ->first();
 
-        if ($template === null) {
-            throw new Exception('Template not found');
+            if ($template === null) {
+                throw new Exception('Template not found');
+            }
+        } catch (Exception $e) {
+            die($e->getMessage());
         }
 
         $this->template = $template;
@@ -41,19 +44,19 @@ class TemplateController extends Controller
 
         $form = EditTemplateForm::fromTemplate($this->template)
             ->on(EditTemplateForm::ON_SUCCESS, function (Form $form) {
-            $pressedButton = $form->getPressedSubmitElement();
-            if ($pressedButton && $pressedButton->getName() === 'remove') {
-                Notification::success($this->translate('Removed template successfully'));
+                $pressedButton = $form->getPressedSubmitElement();
+                if ($pressedButton && $pressedButton->getName() === 'remove') {
+                    Notification::success($this->translate('Removed template successfully'));
 
-                $this->switchToSingleColumnLayout();
-            } else {
-                Notification::success($this->translate('Updated template successfully'));
+                    $this->switchToSingleColumnLayout();
+                } else {
+                    Notification::success($this->translate('Updated template successfully'));
 
-                $this->closeModalAndRefreshRemainingViews(
-                    Url::fromPath('reporting/template', ['id' => $this->template->id])
-                );
-            }
-        })->handleRequest($this->getServerRequest());
+                    $this->closeModalAndRefreshRemainingViews(
+                        Url::fromPath('ktesting/template', ['id' => $this->template->id])
+                    );
+                }
+            })->handleRequest($this->getServerRequest());
 
         $this->addContent($form);
     }
