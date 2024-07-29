@@ -4,7 +4,7 @@
 
 namespace Icinga\Module\Ktesting\Web;
 
-use Icinga\Module\Ktesting\Common\BaseItemList;
+use Icinga\Module\Kubernetes\Common\BaseItemList;
 
 class TestList extends BaseItemList
 {

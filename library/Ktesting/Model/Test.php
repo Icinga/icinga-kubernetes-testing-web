@@ -28,12 +28,13 @@ class Test extends Model
     public function getColumnDefinitions(): array
     {
         return [
-            'uuid'            => $this->translate('UUID'),
-            'namespace'       => $this->translate('Namespace'),
-            'name'            => $this->translate('Name'),
-            'uid'             => $this->translate('UID'),
-            'deployment_name' => $this->translate('Deployment Name'),
-            'created'         => $this->translate('Created At')
+            'uuid'             => $this->translate('UUID'),
+            'namespace'        => $this->translate('Namespace'),
+            'name'             => $this->translate('Name'),
+            'uid'              => $this->translate('UID'),
+            'resource_version' => $this->translate('Resource Version'),
+            'deployment_name'  => $this->translate('Deployment Name'),
+            'created'          => $this->translate('Created At')
         ];
     }
 
@@ -44,6 +45,7 @@ class Test extends Model
             'namespace',
             'name',
             'uid',
+            'resource_version',
             'deployment_name',
             'created',
         ];

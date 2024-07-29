@@ -4,7 +4,7 @@
 
 namespace Icinga\Module\Ktesting\Web;
 
-use Icinga\Module\Ktesting\Common\BaseListItem;
+use Icinga\Module\Kubernetes\Common\BaseListItem;
 use Icinga\Module\Ktesting\Common\Links;
 use ipl\Html\Attributes;
 use ipl\Html\BaseHtmlElement;

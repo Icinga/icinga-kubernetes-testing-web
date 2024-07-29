@@ -4,9 +4,8 @@
 
 namespace Icinga\Module\Ktesting\Web;
 
-use Icinga\Module\Ktesting\Common\Database;
 use Icinga\Module\Kubernetes\Common\Database as KDatabase;
-use Icinga\Module\Ktesting\Common\ResourceDetails;
+use Icinga\Module\Kubernetes\Common\ResourceDetails;
 use Icinga\Module\Ktesting\Model\Test;
 use Icinga\Module\Kubernetes\Model\Deployment;
 use Icinga\Module\Kubernetes\Model\Pod;
