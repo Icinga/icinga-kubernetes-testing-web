@@ -44,9 +44,6 @@ class TestingController extends Controller
                 $endpoint = 'test/create';
 
                 $deploymentName = $form->getValue('deploymentName');
-                $testKind = $form->getValue('testKind');
-                $totalReplicas = $form->getValue("totalReplicas");
-                $badReplicas = $form->getValue("badReplicas");
 
                 $rs = $db->yieldAll(
                     (new Select())
@@ -61,24 +58,9 @@ class TestingController extends Controller
                     }
                 }
 
-                if ($totalReplicas < $badReplicas) {
-                    Notification::error($this->translate('Bad replicas cannot be greater than total replicas'));
-                    return;
-                }
-
-                if ($totalReplicas == 0) {
-                    Notification::error($this->translate('Total replicas cannot be 0'));
-                    return;
-                }
-
                 $query = "deploymentName="
                     . $deploymentName
-                    . "&tests="
-                    . $testKind
-                    . ","
-                    . $totalReplicas
-                    . ","
-                    . $badReplicas;
+                    . "&tests=";
 
                 for ($i = 0; ; $i++) {
                     $testKind = $form->getValue("testKind-$i");
@@ -99,7 +81,11 @@ class TestingController extends Controller
                         return;
                     }
 
-                    $query .= ":$testKind,$totalReplicas,$badReplicas";
+                    if ($i > 0) {
+                        $query .= ":";
+                    }
+
+                    $query .= "$testKind,$totalReplicas,$badReplicas";
                 }
 
                 $ch = curl_init("http://$clusterIp:$port/$endpoint?$query");
@@ -116,7 +102,7 @@ class TestingController extends Controller
                     $storeTemplate = false;
                 }
 
-                if ($form->getValue('templateName') !== '' && $storeTemplate) {
+                if ($form->getValue('templateName') && $storeTemplate) {
                     $id = hash('md5', $form->getValue('templateName'));
 
                     $db->prepexec(
@@ -129,19 +115,6 @@ class TestingController extends Controller
                                 time() * 1000
                             ])
                     );
-
-                    $db->prepexec(
-                        (new Insert())
-                            ->into('template_test')
-                            ->columns(['template_id', 'test_kind', 'total_replicas', 'bad_replicas'])
-                            ->values([
-                                $id,
-                                $form->getValue('testKind'),
-                                $form->getValue('totalReplicas'),
-                                $form->getValue('badReplicas')
-                            ])
-                    );
-
 
                     for ($i = 0; ; $i++) {
                         $testKind = $form->getValue("testKind-$i");

@@ -45,21 +45,11 @@ class EditTemplateForm extends CompatForm
         $form->populate($template);
 
         foreach ($res as $index => $row) {
-            if ($index === 0) {
-                $temp = [
-                    "testKind" => $row->test_kind,
-                    "totalReplicas" => $row->total_replicas,
-                    "badReplicas" => $row->bad_replicas
-                ];
-            } else {
-                $temp = [
-                    "testKind-" . $index - 1 => $row->test_kind,
-                    "totalReplicas-" . $index - 1 => $row->total_replicas,
-                    "badReplicas-" . $index - 1 => $row->bad_replicas
-                ];
-            }
-
-            $form->populate($temp);
+            $form->populate([
+                "testKind-" . $index        => $row->test_kind,
+                "totalReplicas-" . $index   => $row->total_replicas,
+                "badReplicas-" . $index     => $row->bad_replicas
+            ]);
         }
 
         $form->noTemplateTests = count($res);
@@ -114,7 +104,7 @@ class EditTemplateForm extends CompatForm
 
         $this->addElement(
             'select',
-            'testKind',
+            'testKind-0',
             [
                 'label' => $this->translate('Test Kind'),
                 'required' => true,
@@ -128,7 +118,7 @@ class EditTemplateForm extends CompatForm
 
         $this->addElement(
             'input',
-            'totalReplicas',
+            'totalReplicas-0',
             [
                 'type' => 'number',
                 'label' => $this->translate('Total Replicas'),
@@ -139,7 +129,7 @@ class EditTemplateForm extends CompatForm
 
         $this->addElement(
             'input',
-            'badReplicas',
+            'badReplicas-0',
             [
                 'type' => 'number',
                 'label' => $this->translate('Bad Replicas'),
@@ -153,11 +143,11 @@ class EditTemplateForm extends CompatForm
             'numberOfAdditionalFields',
             [
                 'type' => 'hidden',
-                'value' => $this->noTemplateTests - 1
+                'value' => $this->noTemplateTests
             ]
         );
 
-        $noAddFields = $this->noTemplateTests - 1;
+        $noAddFields = $this->noTemplateTests;
 
         if ($this->getElement('addFields')->hasBeenPressed()) {
             $noAddFields = intval($this->getValue('numberOfAdditionalFields'));
@@ -175,7 +165,7 @@ class EditTemplateForm extends CompatForm
             $noAddFields = intval($this->getValue('numberOfAdditionalFields'));
         }
 
-        for ($i = 0; $i < $noAddFields; $i++) {
+        for ($i = 1; $i < $noAddFields; $i++) {
             $this->addHtml(Html::tag('br'));
 
             $this->addElement(
@@ -223,7 +213,7 @@ class EditTemplateForm extends CompatForm
                     'div',
                     Attributes::create(),
                     [
-                        ($noAddFields > 0) ? $removeBtn : null,
+                        ($noAddFields > 1) ? $removeBtn : null,
                         $addBtn,
                     ]
                 )
@@ -270,13 +260,6 @@ class EditTemplateForm extends CompatForm
                 'name' => $values['name'],
                 'modified' => time() * 1000
             ], ['id = ?' => $this->template->id]);
-
-            $db->insert('template_test', [
-                'template_id' => $this->template->id,
-                'test_kind' => $values['testKind'],
-                'total_replicas' => $values['totalReplicas'],
-                'bad_replicas' => $values['badReplicas']
-            ]);
 
             for ($i = 0; ; $i++) {
                 if (
