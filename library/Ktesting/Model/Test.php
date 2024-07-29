@@ -4,7 +4,7 @@
 
 namespace Icinga\Module\Ktesting\Model;
 
-use Icinga\Module\Ktesting\Model\Behavior\Uuid;
+use Icinga\Module\Kubernetes\Model\Behavior\Uuid;
 use ipl\I18n\Translation;
 use ipl\Orm\Behavior\MillisecondTimestamp;
 use ipl\Orm\Behaviors;
