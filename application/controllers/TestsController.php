@@ -6,32 +6,97 @@ namespace Icinga\Module\Ktesting\Controllers;
 
 use Icinga\Module\Ktesting\Common\Database;
 use Icinga\Module\Ktesting\Model\Test;
-use Icinga\Module\Ktesting\Web\ListController;
 use Icinga\Module\Ktesting\Web\TestList;
-use ipl\Orm\Query;
+use Icinga\Module\Ktesting\Common\Links;
+use Icinga\Module\Notifications\Web\Control\SearchBar\ObjectSuggestions;
+use ipl\Stdlib\Filter;
+use ipl\Web\Compat\CompatController;
+use ipl\Web\Compat\SearchControls;
+use ipl\Web\Filter\QueryString;
+use ipl\Web\Widget\ButtonLink;
 
-class TestsController extends ListController
+class TestsController extends CompatController
 {
-    protected function getContentClass(): string
+    use SearchControls;
+
+    public function completeAction(): void
     {
-        return TestList::class;
+        $suggestions = new ObjectSuggestions();
+        $suggestions->setModel(Test::class);
+        $suggestions->forRequest($this->getServerRequest());
+        $this->getDocument()->add($suggestions);
     }
 
-    protected function getQuery(): Query
+    /** @var Filter\Rule Filter from query string parameters */
+    private $filter;
+
+    public function indexAction(): void
     {
-        return Test::on(Database::connection());
+        $tests = Test::on(Database::connection());
+
+        $limitControl = $this->createLimitControl();
+        $sortControl = $this->createSortControl(
+            $tests,
+            [
+                'test.name'      => $this->translate('Name'),
+                'test.namespace' => $this->translate('Namespace'),
+            ]
+        );
+
+        $paginationControl = $this->createPaginationControl($tests);
+        $searchBar = $this->createSearchBar($tests, [
+            $limitControl->getLimitParam(),
+            $sortControl->getSortParam(),
+        ]);
+
+        if ($searchBar->hasBeenSent() && ! $searchBar->isValid()) {
+            if ($searchBar->hasBeenSubmitted()) {
+                $filter = $this->getFilter();
+            } else {
+                $this->addControl($searchBar);
+                $this->sendMultipartUpdate();
+                return;
+            }
+        } else {
+            $filter = $searchBar->getFilter();
+        }
+
+        $tests->filter($filter);
+
+        $this->addControl($paginationControl);
+        $this->addControl($sortControl);
+        $this->addControl($limitControl);
+        $this->addControl($searchBar);
+        $this->addContent(
+            (new ButtonLink(
+                t('New Test'),
+                Links::testCreate(),
+                'plus',
+                [
+                    'class' => 'add-test-control'
+                ]
+            ))->setAttribute('data-base-target', '_next')
+//                ->openInModal()
+        );
+
+        $this->addContent(new TestList($tests));
+
+        if (! $searchBar->hasBeenSubmitted() && $searchBar->hasBeenSent()) {
+            $this->sendMultipartUpdate();
+        }
     }
 
-    protected function getSortColumns(): array
+    /**
+     * Get the filter created from query string parameters
+     *
+     * @return Filter\Rule
+     */
+    private function getFilter(): Filter\Rule
     {
-        return [
-            'test.name' => $this->translate('Name'),
-            'test.namespace' => $this->translate('Namespace'),
-        ];
-    }
+        if ($this->filter === null) {
+            $this->filter = QueryString::parse((string)$this->params);
+        }
 
-    protected function getTitle(): string
-    {
-        return $this->translate('Tests');
+        return $this->filter;
     }
 }

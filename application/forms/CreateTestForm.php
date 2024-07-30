@@ -52,17 +52,6 @@ class CreateTestForm extends CompatForm
             ]
         );
 
-        $this->addElement(
-            'input',
-            'templateName',
-            [
-                'type' => 'text',
-                'label' => $this->translate('Template Name (optional)'),
-                'required' => false,
-                'value' => ''
-            ]
-        );
-
         $this->addHtml(Html::tag('br'));
 
         $this->addElement(

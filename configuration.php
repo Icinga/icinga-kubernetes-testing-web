@@ -25,10 +25,10 @@ $section->add(
 );
 
 $section->add(
-    N_('Manage'),
+    N_('Templates'),
     [
-        'description' => $this->translate('Manage tests'),
-        'url'         => 'ktesting/testing/create',
+        'description' => $this->translate('List all Templates'),
+        'url'         => 'ktesting/templates',
         'priority'    => $priority++
     ]
 );

@@ -4,13 +4,12 @@
 
 namespace Icinga\Module\Ktesting\Controllers;
 
+use Icinga\Module\Ktesting\Common\Links;
 use Icinga\Module\Ktesting\Model\Template;
 use Icinga\Module\Ktesting\Web\Controller;
-use Icinga\Module\Ktesting\Forms\EditTemplateForm;
+use Icinga\Module\Ktesting\Forms\TemplateForm;
 use Icinga\Module\Ktesting\Common\Database;
 use Icinga\Web\Notification;
-use ipl\Html\Form;
-use ipl\Web\Url;
 use ipl\Stdlib\Filter;
 use Exception;
 
@@ -18,9 +17,24 @@ class TemplateController extends Controller
 {
     protected Template $template;
 
-    public function init(): void
+    public function createAction(): void
     {
-        parent::init();
+        $this->addTitleTab($this->translate('Create Template'));
+
+        $form = (new TemplateForm())
+            ->on(TemplateForm::ON_SUCCESS, function (TemplateForm $form) {
+                Notification::success($this->translate('Created template successfully'));
+
+                $this->sendExtraUpdates(['#col1']);
+                $this->redirectNow(Links::templateUpdate($form->getTemplate()));
+
+            })->handleRequest($this->getServerRequest());
+
+        $this->addContent($form);
+    }
+
+    public function updateAction(): void
+    {
 
         try {
             /** @var Template $template */
@@ -35,15 +49,10 @@ class TemplateController extends Controller
             die($e->getMessage());
         }
 
-        $this->template = $template;
-    }
+        $this->addTitleTab($this->translate('Update Template'));
 
-    public function editAction(): void
-    {
-        $this->addTitleTab($this->translate('Edit Template'));
-
-        $form = EditTemplateForm::fromTemplate($this->template)
-            ->on(EditTemplateForm::ON_SUCCESS, function (Form $form) {
+        $form = TemplateForm::fromTemplate($template)
+            ->on(TemplateForm::ON_SUCCESS, function (TemplateForm $form) use ($template) {
                 $pressedButton = $form->getPressedSubmitElement();
                 if ($pressedButton && $pressedButton->getName() === 'remove') {
                     Notification::success($this->translate('Removed template successfully'));
@@ -53,7 +62,7 @@ class TemplateController extends Controller
                     Notification::success($this->translate('Updated template successfully'));
 
                     $this->closeModalAndRefreshRemainingViews(
-                        Url::fromPath('ktesting/template', ['id' => $this->template->id])
+                        Links::templateUpdate($template)
                     );
                 }
             })->handleRequest($this->getServerRequest());

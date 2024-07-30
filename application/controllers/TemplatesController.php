@@ -4,75 +4,88 @@
 
 namespace Icinga\Module\Ktesting\Controllers;
 
-use Icinga\Module\Ktesting\Web\Controller;
-use ipl\Html\Html;
-use ipl\Html\Attributes;
-use Icinga\Module\Ktesting\Web\CreateAndTemplatesTabs;
+use Icinga\Module\Ktesting\Common\Links;
+use Icinga\Module\Ktesting\Web\TemplateList;
+use ipl\Web\Compat\CompatController;
+use ipl\Web\Compat\SearchControls;
 use Icinga\Module\Ktesting\Model\Template;
 use Icinga\Module\Ktesting\Common\Database;
-use ipl\Web\Url;
-use ipl\Web\Widget\Link;
+use ipl\Web\Filter\QueryString;
+use ipl\Web\Widget\ButtonLink;
+use ipl\Stdlib\Filter;
 
-class TemplatesController extends Controller
+class TemplatesController extends CompatController
 {
-    use CreateAndTemplatesTabs;
+    use SearchControls;
 
     function indexAction(): void
     {
-        $this->createTabs()->activate('templates');
-
         $templates = Template::on(Database::connection());
 
+        $limitControl = $this->createLimitControl();
         $sortControl = $this->createSortControl(
             $templates,
             [
-                'name'      => $this->translate('Name'),
-                'created'   => $this->translate('Created At'),
-                'modified'   => $this->translate('Modified At'),
+                'name'     => $this->translate('Name'),
+                'created'  => $this->translate('Created At'),
+                'modified' => $this->translate('Modified At'),
             ]
         );
 
-        $this->addControl($sortControl);
+        $paginationControl = $this->createPaginationControl($templates);
+        $searchBar = $this->createSearchBar($templates, [
+            $limitControl->getLimitParam(),
+            $sortControl->getSortParam(),
+        ]);
 
-        $tableRows = [];
-
-        foreach ($templates as $template) {
-            $tableRows[] = Html::tag('tr', null, [
-                Html::tag(
-                    'td',
-                    null,
-                    new Link($template->name, Url::fromPath('ktesting/template/edit', ['id' => $template->id]))
-                ),
-                Html::tag('td', null, $template->created->format('Y-m-d H:i')),
-                Html::tag('td', null, (isset($template->modified)) ? $template->modified->format('Y-m-d H:i') : null),
-            ]);
-        }
-
-        if (! empty($tableRows)) {
-            $table = Html::tag(
-                'table',
-                ['class' => 'common-table table-row-selectable', 'data-base-target' => '_next'],
-                [
-                    Html::tag(
-                        'thead',
-                        null,
-                        Html::tag(
-                            'tr',
-                            null,
-                            [
-                                Html::tag('th', null, 'Name'),
-                                Html::tag('th', null, 'Date Created'),
-                                Html::tag('th', null, 'Date Modified'),
-                            ]
-                        )
-                    ),
-                    Html::tag('tbody', null, $tableRows)
-                ]
-            );
-
-            $this->addContent($table);
+        if ($searchBar->hasBeenSent() && ! $searchBar->isValid()) {
+            if ($searchBar->hasBeenSubmitted()) {
+                $filter = $this->getFilter();
+            } else {
+                $this->addControl($searchBar);
+                $this->sendMultipartUpdate();
+                return;
+            }
         } else {
-            $this->addContent(Html::tag('p', null, 'No templates created yet.'));
+            $filter = $searchBar->getFilter();
         }
+
+        $templates->filter($filter);
+
+        $this->addControl($paginationControl);
+        $this->addControl($sortControl);
+        $this->addControl($limitControl);
+        $this->addControl($searchBar);
+        $this->addContent(
+            (new ButtonLink(
+                t('New Template'),
+                Links::templateCreate(),
+                'plus',
+                [
+                    'class' => 'add-template-control'
+                ]
+            ))->setAttribute('data-base-target', '_next')
+//                ->openInModal()
+        );
+
+        $this->addContent(new TemplateList($templates));
+
+        if (! $searchBar->hasBeenSubmitted() && $searchBar->hasBeenSent()) {
+            $this->sendMultipartUpdate();
+        }
+    }
+
+    /**
+     * Get the filter created from query string parameters
+     *
+     * @return Filter\Rule
+     */
+    private function getFilter(): Filter\Rule
+    {
+        if ($this->filter === null) {
+            $this->filter = QueryString::parse((string)$this->params);
+        }
+
+        return $this->filter;
     }
 }

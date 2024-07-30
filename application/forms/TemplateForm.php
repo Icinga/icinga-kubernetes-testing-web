@@ -7,19 +7,23 @@ namespace Icinga\Module\Ktesting\Forms;
 use Exception;
 use GuzzleHttp\Psr7\UploadedFile;
 use Icinga\Module\Ktesting\Common\Database;
+use Icinga\Module\Ktesting\Model\Template;
 use Icinga\Module\Ktesting\Model\TemplateTest;
+use Icinga\Module\Kubernetes\Web\Data;
 use Icinga\Util\Json;
 use ipl\Html\Attributes;
 use ipl\Html\Html;
 use ipl\Html\HtmlDocument;
+use ipl\Sql\Insert;
 use ipl\Sql\Select;
+use ipl\Stdlib\Filter;
 use ipl\Web\Compat\CompatForm;
 
-class EditTemplateForm extends CompatForm
+class TemplateForm extends CompatForm
 {
     protected $template;
 
-    protected int $noTemplateTests;
+    protected int $noTemplateTests = 1;
 
     /**
      * Create a new form instance with the given template
@@ -66,8 +70,23 @@ class EditTemplateForm extends CompatForm
         return $this->hasBeenSent() && ($this->getPopulatedValue('submit') || $this->getPopulatedValue('remove'));
     }
 
+    public function getTemplate()
+    {
+        return $this->template;
+    }
+
     protected function assemble()
     {
+        $createBtn = $this->createElement(
+            'submit',
+            'submit',
+            [
+                'label' => $this->translate('Add Template')
+            ]
+        );
+        $this->registerElement($createBtn);
+        $this->decorate($createBtn);
+
         $updateBtn = $this->createElement(
             'submit',
             'submit',
@@ -224,39 +243,89 @@ class EditTemplateForm extends CompatForm
             )
         );
 
-//        $this->addElement('submit', 'submit', [
-//            'label' => $this->template === null
-//                ? $this->translate('Create Template')
-//                : $this->translate('Update Template')
-//        ]);
+        $this->addHtml(($this->template === null) ? $createBtn : $updateBtn);
 
-        $this->addHtml($updateBtn);
+        if ($this->template !== null) {
+            $removeButton = $this->createElement('submit', 'remove', [
+                'label'          => $this->translate('Remove Template'),
+                'class'          => 'btn-remove',
+                'formnovalidate' => true
+            ]);
+            $this->registerElement($removeButton);
 
-//        if ($this->template !== null) {
-        $removeButton = $this->createElement('submit', 'remove', [
-            'label'          => $this->translate('Remove Template'),
-            'class'          => 'btn-remove',
-            'formnovalidate' => true
-        ]);
-        $this->registerElement($removeButton);
-
-        /** @var HtmlDocument $wrapper */
-        $wrapper = $this->getElement('submit')->getWrapper();
-        $wrapper->prepend($removeButton);
-//        }
+            /** @var HtmlDocument $wrapper */
+            $wrapper = $this->getElement('submit')->getWrapper();
+            $wrapper->prepend($removeButton);
+        }
     }
 
     public function onSuccess()
     {
+        if ($this->template === null) {
+            $this->createTemplate();
+        } else {
+            $this->updateTemplate();
+        }
+    }
+
+    protected function createTemplate()
+    {
+        $db = Database::connection();
+        $id = hash('md5', $this->getValue('name'));
         try {
-            Database::connection()->delete('template_test', ['template_id = ?' => $this->template->id]);
+            $db->prepexec(
+                (new Insert())
+                    ->into('template')
+                    ->columns(['id', 'name', 'created'])
+                    ->values([
+                        $id,
+                        $this->getValue('name'),
+                        time() * 1000
+                    ])
+            );
+        } catch (Exception $e) {
+            die($e->getMessage());
+        }
+
+        for ($i = 0; ; $i++) {
+            $testKind = $this->getValue("testKind-$i");
+            $totalReplicas = $this->getValue("totalReplicas-$i");
+            $badReplicas = $this->getValue("badReplicas-$i");
+
+            if ($testKind === null || $totalReplicas === null || $badReplicas === null) {
+                break;
+            }
+
+            try {
+                $db->prepexec(
+                    (new Insert())
+                        ->into('template_test')
+                        ->columns(['template_id', 'test_kind', 'total_replicas', 'bad_replicas'])
+                        ->values([$id, $testKind, $totalReplicas, $badReplicas])
+                );
+            } catch (Exception $e) {
+                die($e->getMessage());
+            }
+        }
+
+        $this->template = Template::on(Database::connection())
+            ->filter(Filter::equal('id', $id))
+            ->first();
+    }
+
+    protected function updateTemplate()
+    {
+        $db = Database::connection();
+
+        try {
+            $db->delete('template_test', ['template_id = ?' => $this->template->id]);
         } catch (Exception $e) {
             die($e->getMessage());
         }
 
         if ($this->getPopulatedValue('remove')) {
             try {
-                Database::connection()->delete('template', ['id = ?' => $this->template->id]);
+                $db->delete('template', ['id = ?' => $this->template->id]);
             } catch (Exception $e) {
                 die($e->getMessage());
             }
@@ -265,7 +334,6 @@ class EditTemplateForm extends CompatForm
 
         $values = $this->getValues();
 
-        $db = Database::connection();
         try {
             $db->update('template', [
                 'name'     => $values['name'],
