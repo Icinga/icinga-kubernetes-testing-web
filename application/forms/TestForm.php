@@ -8,7 +8,7 @@ use ipl\Html\Attributes;
 use ipl\Web\Compat\CompatForm;
 use ipl\Html\Html;
 
-class CreateTestForm extends CompatForm
+class TestForm extends CompatForm
 {
     protected function assemble(): void
     {
