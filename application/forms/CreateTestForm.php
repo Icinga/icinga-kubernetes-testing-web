@@ -1,10 +1,10 @@
 <?php
 
+/* Icinga for Kubernetes Testing Web | (c) 2024 Icinga GmbH | GPLv2 */
+
 namespace Icinga\Module\Ktesting\Forms;
 
 use ipl\Html\Attributes;
-use ipl\Html\Contract\FormSubmitElement;
-use ipl\Html\FormElement\TextElement;
 use ipl\Web\Compat\CompatForm;
 use ipl\Html\Html;
 
@@ -56,7 +56,7 @@ class CreateTestForm extends CompatForm
 
         $this->addElement(
             'select',
-            'testKind',
+            'testKind-0',
             [
                 'label' => $this->translate('Test Kind'),
                 'required' => true,
@@ -70,7 +70,7 @@ class CreateTestForm extends CompatForm
 
         $this->addElement(
             'input',
-            'totalReplicas',
+            'totalReplicas-0',
             [
                 'type' => 'number',
                 'label' => $this->translate('Total Replicas'),
@@ -81,7 +81,7 @@ class CreateTestForm extends CompatForm
 
         $this->addElement(
             'input',
-            'badReplicas',
+            'badReplicas-0',
             [
                 'type' => 'number',
                 'label' => $this->translate('Bad Replicas'),
@@ -95,11 +95,11 @@ class CreateTestForm extends CompatForm
             'numberOfAdditionalFields',
             [
                 'type' => 'hidden',
-                'value' => 0
+                'value' => 1
             ]
         );
 
-        $noOfAddFields = 0;
+        $noOfAddFields = 1;
 
         if ($this->getElement('addFields')->hasBeenPressed()) {
             $noOfAddFields = intval($this->getValue('numberOfAdditionalFields'));
@@ -117,7 +117,7 @@ class CreateTestForm extends CompatForm
             $noOfAddFields = intval($this->getValue('numberOfAdditionalFields'));
         }
 
-        for ($i = 0; $i < $noOfAddFields; $i++) {
+        for ($i = 1; $i < $noOfAddFields; $i++) {
             $this->addHtml(Html::tag('br'));
 
             $this->addElement(
@@ -165,7 +165,7 @@ class CreateTestForm extends CompatForm
                     'div',
                     Attributes::create(),
                     [
-                        ($noOfAddFields > 0) ? $removeBtn : null,
+                        ($noOfAddFields > 1) ? $removeBtn : null,
                         $addBtn,
                     ]
                 )

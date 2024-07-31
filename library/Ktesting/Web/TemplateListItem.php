@@ -4,6 +4,7 @@
 
 namespace Icinga\Module\Ktesting\Web;
 
+use DateTime;
 use Icinga\Module\Kubernetes\Common\BaseListItem;
 use Icinga\Module\Ktesting\Common\Links;
 use ipl\Html\Attributes;
@@ -14,9 +15,8 @@ use ipl\I18n\Translation;
 use ipl\Web\Widget\Link;
 use ipl\Web\Widget\TimeAgo;
 use ipl\Web\Widget\VerticalKeyValue;
-use ipl\Web\Widget\HorizontalKeyValue;
 
-class TestListItem extends BaseListItem
+class TemplateListItem extends BaseListItem
 {
     use Translation;
 
@@ -32,13 +32,14 @@ class TestListItem extends BaseListItem
         $main->addHtml($this->createHeader());
 
         $keyValue = new HtmlElement('div', new Attributes(['class' => 'key-value']));
-//        $keyValue->addHtml(new VerticalKeyValue($this->translate('Name'), $this->item->name));
-        $keyValue->addHtml(new VerticalKeyValue($this->translate('UID'), $this->item->uid));
-        $keyValue->addHtml(new HtmlElement(
-            'div',
-            null,
-            new HorizontalKeyValue($this->translate('Namespace'), $this->item->namespace),
-            new HorizontalKeyValue($this->translate('Deployment Name'), $this->item->deployment_name)
+
+        $keyValue->addHtml(new VerticalKeyValue(
+            $this->translate('Created'),
+            (new DateTime())->setTimestamp($this->item->created->getTimestamp())->format('Y-m-d H:i:s')
+        ));
+        $keyValue->addHtml(new VerticalKeyValue(
+            $this->translate('Modified'),
+            ($this->item->modified) ? (new DateTime())->setTimestamp($this->item->modified->getTimestamp())->format('Y-m-d H:i:s') : '-'
         ));
 
         $main->addHtml($keyValue);
@@ -48,7 +49,7 @@ class TestListItem extends BaseListItem
     {
         $title->addHtml(Html::sprintf(
             $this->translate('%s', '<test>'),
-            new Link($this->item->name, Links::test($this->item), ['class' => 'subject']),
+            new Link($this->item->name, Links::templateUpdate($this->item), ['class' => 'subject']),
         ));
     }
 

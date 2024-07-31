@@ -25,6 +25,6 @@ class QuickActions extends BaseHtmlElement
 
     protected function assemble()
     {
-        $this->add(Html::tag('li', (new DeleteForm())->setAction(Links::delete($this->test)->getAbsoluteUrl())));
+        $this->add(Html::tag('li', (new DeleteForm())->setAction(Links::testDelete($this->test)->getAbsoluteUrl())));
     }
 }

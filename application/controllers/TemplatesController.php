@@ -4,47 +4,36 @@
 
 namespace Icinga\Module\Ktesting\Controllers;
 
-use Icinga\Module\Ktesting\Common\Database;
-use Icinga\Module\Ktesting\Model\Test;
-use Icinga\Module\Ktesting\Web\TestList;
 use Icinga\Module\Ktesting\Common\Links;
-use Icinga\Module\Notifications\Web\Control\SearchBar\ObjectSuggestions;
-use ipl\Stdlib\Filter;
+use Icinga\Module\Ktesting\Web\TemplateList;
 use ipl\Web\Compat\CompatController;
 use ipl\Web\Compat\SearchControls;
+use Icinga\Module\Ktesting\Model\Template;
+use Icinga\Module\Ktesting\Common\Database;
 use ipl\Web\Filter\QueryString;
 use ipl\Web\Widget\ButtonLink;
+use ipl\Stdlib\Filter;
 
-class TestsController extends CompatController
+class TemplatesController extends CompatController
 {
     use SearchControls;
 
-    public function completeAction(): void
+    function indexAction(): void
     {
-        $suggestions = new ObjectSuggestions();
-        $suggestions->setModel(Test::class);
-        $suggestions->forRequest($this->getServerRequest());
-        $this->getDocument()->add($suggestions);
-    }
-
-    /** @var Filter\Rule Filter from query string parameters */
-    private $filter;
-
-    public function indexAction(): void
-    {
-        $tests = Test::on(Database::connection());
+        $templates = Template::on(Database::connection());
 
         $limitControl = $this->createLimitControl();
         $sortControl = $this->createSortControl(
-            $tests,
+            $templates,
             [
-                'test.name'      => $this->translate('Name'),
-                'test.namespace' => $this->translate('Namespace'),
+                'name'     => $this->translate('Name'),
+                'created'  => $this->translate('Created At'),
+                'modified' => $this->translate('Modified At'),
             ]
         );
 
-        $paginationControl = $this->createPaginationControl($tests);
-        $searchBar = $this->createSearchBar($tests, [
+        $paginationControl = $this->createPaginationControl($templates);
+        $searchBar = $this->createSearchBar($templates, [
             $limitControl->getLimitParam(),
             $sortControl->getSortParam(),
         ]);
@@ -61,7 +50,7 @@ class TestsController extends CompatController
             $filter = $searchBar->getFilter();
         }
 
-        $tests->filter($filter);
+        $templates->filter($filter);
 
         $this->addControl($paginationControl);
         $this->addControl($sortControl);
@@ -69,17 +58,17 @@ class TestsController extends CompatController
         $this->addControl($searchBar);
         $this->addContent(
             (new ButtonLink(
-                t('New Test'),
-                Links::testCreate(),
+                t('New Template'),
+                Links::templateCreate(),
                 'plus',
                 [
-                    'class' => 'add-test-control'
+                    'class' => 'add-template-control'
                 ]
             ))->setAttribute('data-base-target', '_next')
 //                ->openInModal()
         );
 
-        $this->addContent(new TestList($tests));
+        $this->addContent(new TemplateList($templates));
 
         if (! $searchBar->hasBeenSubmitted() && $searchBar->hasBeenSent()) {
             $this->sendMultipartUpdate();

@@ -6,10 +6,10 @@ namespace Icinga\Module\Ktesting\Web;
 
 use Icinga\Module\Kubernetes\Common\BaseItemList;
 
-class TestList extends BaseItemList
+class TemplateList extends BaseItemList
 {
     protected function getItemClass(): string
     {
-        return TestListItem::class;
+        return TemplateListItem::class;
     }
 }

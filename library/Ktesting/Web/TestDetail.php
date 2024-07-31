@@ -4,9 +4,8 @@
 
 namespace Icinga\Module\Ktesting\Web;
 
-use Icinga\Module\Ktesting\Common\Database;
 use Icinga\Module\Kubernetes\Common\Database as KDatabase;
-use Icinga\Module\Ktesting\Common\ResourceDetails;
+use Icinga\Module\Kubernetes\Common\ResourceDetails;
 use Icinga\Module\Ktesting\Model\Test;
 use Icinga\Module\Kubernetes\Model\Deployment;
 use Icinga\Module\Kubernetes\Model\Pod;
@@ -35,10 +34,8 @@ class TestDetail extends BaseHtmlElement
 
     protected function assemble(): void
     {
-        $queryDeployments = Deployment::on(KDatabase::connection())
-            ->filter(
-                Filter::equal('owner.owner_uuid', $this->test->uuid),
-            );
+        $filterDeployments = Filter::equal('owner.owner_uuid', $this->test->uuid);
+        $queryDeployments = Deployment::on(KDatabase::connection())->filter($filterDeployments);
         $resDeployments = $queryDeployments->execute();
 
         $rulesForReplicaSets = [];
@@ -50,10 +47,8 @@ class TestDetail extends BaseHtmlElement
 
         if (!empty($rulesForReplicaSets)) {
             $show = true;
-            $queryReplicaSets = ReplicaSet::on(KDatabase::connection())
-                ->filter(
-                    Filter::any(...$rulesForReplicaSets)
-                );
+            $filterReplicaSets = Filter::any(...$rulesForReplicaSets);
+            $queryReplicaSets = ReplicaSet::on(KDatabase::connection())->filter($filterReplicaSets);
             $resReplicaSets = $queryReplicaSets->execute();
 
             $rulesForPods = [];
@@ -62,10 +57,8 @@ class TestDetail extends BaseHtmlElement
             }
 
             if (!empty($rulesForPods)) {
-                $queryPods = Pod::on(KDatabase::connection())
-                    ->filter(
-                        Filter::any(...$rulesForPods)
-                    );
+                $filterPods = Filter::any(...$rulesForPods);
+                $queryPods = Pod::on(KDatabase::connection())->filter($filterPods);
                 $resPods = $queryPods->execute();
             }
         }
