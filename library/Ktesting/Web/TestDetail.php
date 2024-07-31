@@ -34,9 +34,9 @@ class TestDetail extends BaseHtmlElement
 
     protected function assemble(): void
     {
-        $filterDeployments = Filter::equal('owner.owner_uuid', $this->test->uuid);
-        $queryDeployments = Deployment::on(KDatabase::connection())->filter($filterDeployments);
-        $resDeployments = $queryDeployments->execute();
+        $resDeployments = Deployment::on(KDatabase::connection())
+            ->filter(Filter::equal('owner.owner_uuid', $this->test->uuid))
+            ->execute();
 
         $rulesForReplicaSets = [];
         foreach ($resDeployments as $deployment) {
@@ -47,9 +47,9 @@ class TestDetail extends BaseHtmlElement
 
         if (!empty($rulesForReplicaSets)) {
             $show = true;
-            $filterReplicaSets = Filter::any(...$rulesForReplicaSets);
-            $queryReplicaSets = ReplicaSet::on(KDatabase::connection())->filter($filterReplicaSets);
-            $resReplicaSets = $queryReplicaSets->execute();
+            $resReplicaSets = ReplicaSet::on(KDatabase::connection())
+                ->filter(Filter::any(...$rulesForReplicaSets))
+                ->execute();
 
             $rulesForPods = [];
             foreach ($resReplicaSets as $replicaSet) {
@@ -57,9 +57,9 @@ class TestDetail extends BaseHtmlElement
             }
 
             if (!empty($rulesForPods)) {
-                $filterPods = Filter::any(...$rulesForPods);
-                $queryPods = Pod::on(KDatabase::connection())->filter($filterPods);
-                $resPods = $queryPods->execute();
+                $resPods = Pod::on(KDatabase::connection())
+                    ->filter(Filter::any(...$rulesForPods))
+                    ->execute();
             }
         }
 

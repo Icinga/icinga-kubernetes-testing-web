@@ -6,7 +6,7 @@ namespace Icinga\Module\Ktesting\Controllers;
 
 use Icinga\Application\Config;
 use Icinga\Module\Ktesting\Common\Database;
-use Icinga\Module\Ktesting\Forms\CreateTestForm;
+use Icinga\Module\Ktesting\Forms\TestForm;
 use Icinga\Module\Ktesting\Forms\DeleteForm;
 use Icinga\Module\Ktesting\Model\Test;
 use Icinga\Module\Ktesting\Web\QuickActions;
@@ -56,8 +56,8 @@ class TestController extends CompatController
             ),
         );
 
-        $createTestForm = (new CreateTestForm())
-            ->on(CreateTestForm::ON_SUCCESS, function (CreateTestForm $form) {
+        $createTestForm = (new TestForm())
+            ->on(TestForm::ON_SUCCESS, function (TestForm $form) {
                 $config = Config::module('ktesting');
                 $db = Database::connection();
 
