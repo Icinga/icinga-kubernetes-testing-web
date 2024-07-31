@@ -33,6 +33,6 @@ class TemplateTest extends Model
 
     public function createRelations(Relations $relations)
     {
-        $relations->hasOne('template', Template::class);
+        $relations->belongsTo('template', Template::class);
     }
 }
