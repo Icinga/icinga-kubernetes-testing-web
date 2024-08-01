@@ -49,7 +49,6 @@ class Template extends Model
 
     public function createRelations(Relations $relations)
     {
-        $relations->hasMany('template_test', TemplateTest::class)
-            ->setJoinType('LEFT');
+        $relations->hasMany('template_test', TemplateTest::class)->setJoinType('LEFT');
     }
 }

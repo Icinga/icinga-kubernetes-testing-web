@@ -9,6 +9,7 @@ use ipl\I18n\Translation;
 use ipl\Orm\Behavior\MillisecondTimestamp;
 use ipl\Orm\Behaviors;
 use ipl\Orm\Model;
+use ipl\Orm\Relations;
 
 class Test extends Model
 {
@@ -33,7 +34,10 @@ class Test extends Model
             'name'             => $this->translate('Name'),
             'uid'              => $this->translate('UID'),
             'resource_version' => $this->translate('Resource Version'),
-            'deployment_name'  => $this->translate('Deployment Name'),
+            'resource_type'    => $this->translate('Resource Type'),
+            'resource_name'    => $this->translate('Resource Name'),
+            'description'      => $this->translate('Description'),
+            'expected_pods'    => $this->translate('Expected Pods'),
             'created'          => $this->translate('Created At')
         ];
     }
@@ -46,7 +50,10 @@ class Test extends Model
             'name',
             'uid',
             'resource_version',
-            'deployment_name',
+            'resource_type',
+            'resource_name',
+            'description',
+            'expected_pods',
             'created',
         ];
     }
@@ -69,5 +76,10 @@ class Test extends Model
     public function getTableName(): string
     {
         return 'test';
+    }
+
+    public function createRelations(Relations $relations)
+    {
+        $relations->hasMany('test_pod', TestPod::class)->setJoinType('LEFT');
     }
 }
