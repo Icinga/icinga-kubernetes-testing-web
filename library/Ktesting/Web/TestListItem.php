@@ -34,11 +34,14 @@ class TestListItem extends BaseListItem
         $keyValue = new HtmlElement('div', new Attributes(['class' => 'key-value']));
 //        $keyValue->addHtml(new VerticalKeyValue($this->translate('Name'), $this->item->name));
         $keyValue->addHtml(new VerticalKeyValue($this->translate('UID'), $this->item->uid));
+        $keyValue->addHtml(new VerticalKeyValue($this->translate('Namespace'), $this->item->namespace));
+//        $keyValue->addHtml(new VerticalKeyValue($this->translate('Resource Type'), $this->item->resource_type));
+//        $keyValue->addHtml(new VerticalKeyValue($this->translate('Resource Name'), $this->item->resource_name));
         $keyValue->addHtml(new HtmlElement(
             'div',
             null,
-            new HorizontalKeyValue($this->translate('Namespace'), $this->item->namespace),
-            new HorizontalKeyValue($this->translate('Deployment Name'), $this->item->deployment_name)
+            new HorizontalKeyValue($this->translate('Resource Type'), $this->item->resource_type),
+            new HorizontalKeyValue($this->translate('Resource Name'), $this->item->resource_name)
         ));
 
         $main->addHtml($keyValue);

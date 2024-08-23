@@ -47,12 +47,14 @@ class TestForm extends CompatForm
         );
         $this->registerElement($removeBtn);
 
-        $templates = Template::on(Database::connection())->filter(Filter::all())->execute();
+//        $templates = Template::on(Database::connection())->execute();
         $options = [null => 'Please Choose'];
 
-        foreach ($templates as $template) {
-            $options[$template->name] = $template->name;
-        }
+//        foreach ($templates as $template) {
+//            $options[$template->name] = $template->name;
+//        }
+
+        $this->add(Html::tag('h2', 'General'));
 
         $this->addElement(
             'select',
@@ -64,27 +66,16 @@ class TestForm extends CompatForm
             ]
         );
 
-        if (
-            $this->hasBeenSent()
-            && $this->getElement('template')->isValid()
-            && ! $this->hasBeenSubmitted()
-            && ! $this->getElement('addFields')->hasBeenPressed()
-            && ! $this->getElement('removeFields')->hasBeenPressed()
-        )
-        {
-            $this->clearPopulatedValue('numberOfAdditionalFields');
-        }
+//        $templateTests = TemplateTest::on(Database::connection())
+//            ->filter(Filter::equal('template.name', $this->getPopulatedValue('template')))
+//            ->execute();
 
-        $templateTests = TemplateTest::on(Database::connection())
-            ->filter(Filter::equal('template.name', $this->getPopulatedValue('template')))
-            ->execute();
+        $baseCount = 1;
+//        foreach ($templateTests as $_) {
+//            $baseCount++;
+//        }
 
-        $baseCount = 0;
-        foreach ($templateTests as $_) {
-            $baseCount++;
-        }
-
-        $baseCount = $baseCount > 0 ? $baseCount : 1;
+//        $baseCount = $baseCount > 0 ? $baseCount : 1;
 
         $this->addElement(
             'hidden',
@@ -95,53 +86,69 @@ class TestForm extends CompatForm
         );
 
         $this->addElement(
+            'select',
+            'resourceType',
+            [
+                'label'   => $this->translate('Resource Type'),
+                'options' => [
+                    'deployment'  => 'Deployment',
+                    'replicaset'  => 'ReplicaSet',
+                    'statefulset' => 'StatefulSet',
+                    'daemonset'   => 'DaemonSet',
+
+                ],
+                'class'   => 'autosubmit'
+            ]
+        );
+
+        if (
+            $this->hasBeenSent()
+            && $this->getElement('template')->isValid()
+            && ! $this->hasBeenSubmitted()
+            && ! $this->getElement('addFields')->hasBeenPressed()
+            && ! $this->getElement('removeFields')->hasBeenPressed()
+        ) {
+            $this->clearPopulatedValue('numberOfAdditionalFields');
+        }
+        $resourceType = $this->getValue('resourceType');
+        if ($resourceType) {
+            $resourceType = str_replace('set', 'Set', ucfirst($resourceType));
+        }
+
+        $this->addElement(
             'input',
-            'deploymentName',
+            'resourceName',
             [
                 'type'     => 'text',
-                'label'    => $this->translate('Deployment Name'),
+                'label'    => $this->translate(($resourceType ?? 'Deployment') . ' Name'),
                 'required' => true,
-                'value'    => ''
             ]
         );
 
-        $this->addHtml(Html::tag('br'));
-
         $this->addElement(
-            'select',
-            'testKind-0',
+            'textarea',
+            'description',
             [
-                'label'    => $this->translate('Test Kind'),
-                'required' => true,
-                'options'  => [
-                    null     => 'Please Choose',
-                    'cpu'    => 'cpu',
-                    'memory' => 'memory',
-                ]
+                'label' => $this->translate('Description'),
             ]
         );
 
         $this->addElement(
             'input',
-            'totalReplicas-0',
+            'expectedPods',
             [
-                'type'     => 'number',
-                'label'    => $this->translate('Total Replicas'),
-                'required' => true,
-                'value'    => ''
+                'type'        => 'number',
+                'label'       => $this->translate('Expected Pods'),
+                'required'    => ! (isset($resourceType) && $resourceType === 'DaemonSet'),
+                'min'         => 1,
+                'disabled'    => isset($resourceType) && $resourceType === 'DaemonSet',
+                'placeholder' => isset($resourceType) && $resourceType === 'DaemonSet'
+                    ? $this->translate('Not applicable for DaemonSet')
+                    : null
             ]
         );
 
-        $this->addElement(
-            'input',
-            'badReplicas-0',
-            [
-                'type'     => 'number',
-                'label'    => $this->translate('Bad Replicas'),
-                'required' => true,
-                'value'    => ''
-            ]
-        );
+        $this->add(Html::tag('h2', 'Tests'));
 
         $noOfAddFields = $baseCount;
 
@@ -149,30 +156,27 @@ class TestForm extends CompatForm
             if ($noOfAddFields < $baseCount) {
                 $noOfAddFields = $baseCount;
             } else {
-                $noOfAddFields = (int) $this->getValue('numberOfAdditionalFields');
+                $noOfAddFields = (int)$this->getValue('numberOfAdditionalFields');
             }
             $noOfAddFields++;
             $this->getElement('numberOfAdditionalFields')->setValue($noOfAddFields);
         }
 
         if ($this->getElement('removeFields')->hasBeenPressed()) {
-            $noOfAddFields = (int) $this->getValue('numberOfAdditionalFields');
+            $noOfAddFields = (int)$this->getValue('numberOfAdditionalFields');
             $noOfAddFields--;
             $this->getElement('numberOfAdditionalFields')->setValue($noOfAddFields);
         }
 
         if ($this->hasBeenSubmitted()) {
-            $noOfAddFields = (int) $this->getValue('numberOfAdditionalFields');
+            $noOfAddFields = (int)$this->getValue('numberOfAdditionalFields');
         }
 
-        for ($i = 1; $i < $noOfAddFields; $i++) {
-            $this->addHtml(Html::tag('br'));
-
-            $this->addElement(
+        for ($i = 0; $i < $noOfAddFields; $i++) {
+            $testKind = $this->createElement(
                 'select',
                 "testKind-$i",
                 [
-                    'label'    => $this->translate('Test Kind'),
                     'required' => true,
                     'options'  => [
                         null     => 'Please Choose',
@@ -181,27 +185,35 @@ class TestForm extends CompatForm
                     ]
                 ]
             );
+            $this->registerElement($testKind);
 
-            $this->addElement(
+            $testPercentage = $this->createElement(
                 'input',
-                "totalReplicas-$i",
+                "testPercentage-$i",
                 [
                     'type'     => 'number',
-                    'label'    => $this->translate('Total Replicas'),
                     'required' => true,
-                    'value'    => ''
+                    'value'    => '',
+                    'min'      => 1,
+                    'max'      => 100,
                 ]
             );
+            $this->registerElement($testPercentage);
 
-            $this->addElement(
-                'input',
-                "badReplicas-$i",
-                [
-                    'type'     => 'number',
-                    'label'    => $this->translate('Bad Replicas'),
-                    'required' => true,
-                    'value'    => ''
-                ]
+            $this->addHtml(
+                Html::tag(
+                    'div',
+                    Attributes::create(['class' => 'control-group form-controls']),
+                    [
+                        Html::tag(
+                            'div',
+                            Attributes::create(['class' => 'control-label-group']),
+                        ),
+                        $testKind,
+                        $testPercentage,
+                        Html::tag('p', '%')
+                    ]
+                )
             );
         }
 
@@ -213,7 +225,7 @@ class TestForm extends CompatForm
                     'div',
                     Attributes::create(),
                     [
-                        ($noOfAddFields > $baseCount) ? $removeBtn : null,
+                        ($noOfAddFields > 0) ? $removeBtn : null,
                         $addBtn,
                     ]
                 )
@@ -222,13 +234,13 @@ class TestForm extends CompatForm
 
         $this->addElement($submitBtn);
 
-        $counter = 0;
-        // TODO set default values for template tests
-        foreach ($templateTests as $test) {
-            $this->getElement("testKind-$counter")->setValue($test->test_kind);
-            $this->getElement("totalReplicas-$counter")->setValue($test->total_replicas);
-            $this->getElement("badReplicas-$counter")->setValue($test->bad_replicas);
-            $counter++;
-        }
+//        $counter = 0;
+//        // TODO set default values for template tests
+//        foreach ($templateTests as $test) {
+//            $this->getElement("testKind-$counter")->setValue($test->test_kind);
+//            $this->getElement("totalReplicas-$counter")->setValue($test->total_replicas);
+//            $this->getElement("badReplicas-$counter")->setValue($test->bad_replicas);
+//            $counter++;
+//        }
     }
 }

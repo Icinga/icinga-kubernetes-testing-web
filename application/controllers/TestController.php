@@ -6,15 +6,13 @@ namespace Icinga\Module\Ktesting\Controllers;
 
 use Icinga\Application\Config;
 use Icinga\Module\Ktesting\Common\Database;
+use Icinga\Module\Ktesting\Common\Links;
 use Icinga\Module\Ktesting\Forms\TestForm;
 use Icinga\Module\Ktesting\Forms\DeleteForm;
 use Icinga\Module\Ktesting\Model\Test;
 use Icinga\Module\Ktesting\Web\QuickActions;
 use Icinga\Module\Ktesting\Web\TestDetail;
 use Icinga\Web\Notification;
-use ipl\Html\Attributes;
-use ipl\Html\Html;
-use ipl\Sql\Select;
 use ipl\Stdlib\Filter;
 use ipl\Web\Compat\CompatController;
 use Ramsey\Uuid\Uuid;
@@ -48,58 +46,71 @@ class TestController extends CompatController
 
     public function createAction(): void
     {
-        $this->addContent(
-            Html::tag(
-                'h1',
-                Attributes::create(),
-                $this->translate('Create Test')
-            ),
-        );
+        $this->addTitleTab($this->translate('Create Test'));
 
         $createTestForm = (new TestForm())
             ->on(TestForm::ON_SUCCESS, function (TestForm $form) {
                 $config = Config::module('ktesting');
-                $db = Database::connection();
 
                 $clusterIp = $config->get('api', 'clusterIp');
                 $port = $config->get('api', 'apiPort');
                 $endpoint = 'test/create';
 
-                $deploymentName = $form->getValue('deploymentName');
+                $resourceName = $form->getValue('resourceName');
+                $resourceType = $form->getValue('resourceType');
+                $description = $form->getValue('description');
+                $expectedPods = $form->getValue('expectedPods');
 
-                $rs = $db->yieldAll(
-                    (new Select())
-                        ->columns('deployment_name')
-                        ->from('test')
-                );
-
-                foreach ($rs as $row) {
-                    if ($row->deployment_name === $deploymentName) {
-                        Notification::error($this->translate('Deployment name already exists'));
-                        return;
-                    }
+                if ($resourceName === null) {
+                    Notification::error($this->translate('Resource name cannot be empty'));
+                    return;
                 }
 
-                $query = "deploymentName="
-                    . $deploymentName
+                if ($resourceType === null) {
+                    Notification::error($this->translate('Resource type cannot be empty'));
+                    return;
+                }
+
+                if ($resourceType !== 'daemonset' && $expectedPods <= 0) {
+                    Notification::error($this->translate('Expected pods must be greater than 0'));
+                    return;
+                }
+
+                $rs = Test::on(Database::connection())
+                    ->columns(['resource_name'])
+                    ->filter(Filter::all(
+                        Filter::equal('resource_type', $resourceType),
+                        Filter::equal('resource_name', $resourceName)
+                    ))
+                    ->execute();
+
+                if ($rs->hasResult()) {
+                    Notification::error(
+                        $this->translate(
+                            ucfirst($resourceType) . ' already exists! Please choose another name.'
+                        )
+                    );
+                    return;
+                }
+
+                $query =
+                    "resourceType=$resourceType"
+                    . "&resourceName=$resourceName"
+                    . (isset($description) ? "&description=$description" : "")
+                    . (isset($expectedPods) ? "&expectedPods=$expectedPods" : "")
                     . "&tests=";
 
+                $testCounter = 0;
                 for ($i = 0; ; $i++) {
                     $testKind = $form->getValue("testKind-$i");
-                    $totalReplicas = $form->getValue("totalReplicas-$i");
-                    $badReplicas = $form->getValue("badReplicas-$i");
+                    $testPercentage = $form->getValue("testPercentage-$i");
 
-                    if ($testKind === null || $totalReplicas === null || $badReplicas === null) {
+                    if ($testKind === null || $testPercentage === null) {
                         break;
                     }
 
-                    if ($totalReplicas < $badReplicas) {
-                        Notification::error($this->translate('Bad replicas cannot be greater than total replicas'));
-                        return;
-                    }
-
-                    if ($totalReplicas == 0) {
-                        Notification::error($this->translate('Total replicas cannot be 0'));
+                    if ($testPercentage < 1 || $testPercentage > 100) {
+                        Notification::error($this->translate('Test percentage must be between 1 and 100'));
                         return;
                     }
 
@@ -107,7 +118,13 @@ class TestController extends CompatController
                         $query .= ":";
                     }
 
-                    $query .= "$testKind,$totalReplicas,$badReplicas";
+                    $query .= "$testKind,$testPercentage";
+                    $testCounter++;
+                }
+
+                if ($resourceType !== 'daemonset' && $testCounter > $expectedPods) {
+                    Notification::error($this->translate('Number of tests cannot be greater than expected pods'));
+                    return;
                 }
 
                 $ch = curl_init("http://$clusterIp:$port/$endpoint?$query");
@@ -119,6 +136,10 @@ class TestController extends CompatController
                 } catch (Exception $e) {
                     Notification::error($this->translate($e->getMessage()));
                 }
+
+                // TODO Go to the test detail page or stay on the same page?
+
+                $this->closeModalAndRefreshRemainingViews(Links::testCreate());
             })->handleRequest($this->getServerRequest());
 
         $this->addContent($createTestForm);
